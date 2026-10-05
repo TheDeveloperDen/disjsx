@@ -1,8 +1,8 @@
 {
 	"name": "disjsx",
 	"version": "1.1.2",
-	"main": "./dist/node/index.js",
-	"module": "./dist/node/index.js",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
 	"sideEffects": false,
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -25,29 +25,27 @@
 	"exports": {
 		".": {
 			"types": "./dist/types/index.d.ts",
-			"bun": "./dist/bun/index.js",
-			"node": "./dist/node/index.js",
-			"default": "./dist/node/index.js"
+			"default": "./dist/index.js"
 		}
 	},
 	"description": "A library for creating Discord messages in JSX",
 	"files": [
-		"dist/**/*"
+		"dist"
 	],
 	"license": "MIT",
 	"private": false,
 	"scripts": {
-		"build:node": "bun build ./src/index.ts --outdir ./dist/node --sourcemap --minify --target node --format esm --define:bundleType='\"node-bundle\"' --define:BUNDLE_ID='\"NODE_OPTIMIZED\"'",
-		"build:bun": "bun build ./src/index.ts --outdir ./dist/bun --sourcemap --minify --target bun --define:bundleType='\"bun-bundle\"' --define:BUNDLE_ID='\"BUN_OPTIMIZED\"'",
 		"build:types": "tsc --project ./tsconfig.build.json",
 		"clean": "rm -rf dist",
-		"build": "npm run clean && npm run build:node && npm run build:bun && npm run build:types",
+		"build": "bun run clean && bun run build:js && bun run build:types",
 		"test": "bun test",
-		"prepublish": "npm run build && npm pack",
 		"format": "bunx prettier --write .",
 		"lint": "bunx eslint .",
 		"lint:fix": "bunx eslint --fix .",
-		"release": "npm run prepublish && npm publish"
+		"release": "npm publish",
+		"build:js": "bun build ./src/index.ts --outdir ./dist --sourcemap --target node --format esm --packages external",
+		"typecheck": "tsc -p tsconfig.build.json --noEmit",
+		"prepublishOnly": "bun run typecheck && bun run build"
 	},
 	"repository": {
 		"type": "git",
