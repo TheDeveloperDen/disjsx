@@ -6,10 +6,7 @@
 		"declarationDir": "./dist/types",
 		"rootDir": "./src",
 		"noEmit": false,
-		"moduleResolution": "nodenext",
-		"module": "nodenext",
-		"declarationMap": true,
-		"baseUrl": "./",
+		"declarationMap": true
 	},
 	"include": ["./src/**/*.ts"],
 	"exclude": ["node_modules", "dist", "**/*.test.ts"]
