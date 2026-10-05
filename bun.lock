@@ -1,11 +1,9 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "spdisc",
-      "dependencies": {
-        "react": "^19.0.0",
-      },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/react": "^19.0.0",
@@ -16,10 +14,12 @@
         "eslint-plugin-react-refresh": "^0.4.19",
         "globals": "^16.0.0",
         "prettier": "^3.5.3",
+        "react": "^19.0.0",
+        "typescript": "^5.8.3",
         "typescript-eslint": "^8.29.1",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "react": "^19.0.0",
       },
     },
   },
