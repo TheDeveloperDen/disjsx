@@ -9,10 +9,12 @@ export const LabelNode: NodeProcessor<LabelPayload, LabelProps> = {
 
 		// Find the first valid child component
 		let component: AnyComponentPayload | null = null;
+
 		for (const child of children) {
 			if (isValidElement(child)) {
 				const processed = processNode(child);
-				if (processed && typeof processed === 'object') {
+
+				if (processed && typeof processed === "object") {
 					component = processed as AnyComponentPayload;
 					break;
 				}
