@@ -1,5 +1,5 @@
-import { type RoleSelectProps, type RoleSelectPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type RoleSelectProps, type RoleSelectPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const RoleSelectNode: NodeProcessor<RoleSelectPayload, RoleSelectProps> = {
 	process: (element) => {

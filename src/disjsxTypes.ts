@@ -33,7 +33,7 @@ import {
 	type ContainerProps,
 	type LabelProps,
 	type FileUploadProps,
-} from "./types";
+} from "./types.js";
 
 /**
  * DISJSX component types.

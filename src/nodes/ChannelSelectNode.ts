@@ -1,5 +1,5 @@
-import { type ChannelSelectProps, type ChannelSelectPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type ChannelSelectProps, type ChannelSelectPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const ChannelSelectNode: NodeProcessor<ChannelSelectPayload, ChannelSelectProps> = {
 	process: (element) => {

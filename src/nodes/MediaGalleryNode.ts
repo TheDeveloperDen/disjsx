@@ -5,9 +5,9 @@ import {
 	type MediaGalleryPayload,
 	type MediaGalleryItemPayload,
 	ComponentType,
-} from "../types";
-import { DISJSX } from "../disjsxTypes";
-import { type NodeProcessor } from "./types";
+} from "../types.js";
+import { DISJSX } from "../disjsxTypes.js";
+import { type NodeProcessor } from "./types.js";
 
 export const MediaGalleryNode: NodeProcessor<MediaGalleryPayload, MediaGalleryProps> = {
 	process: (element, _, __, getDISJSXType, getProcessedElement) => {

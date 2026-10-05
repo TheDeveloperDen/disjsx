@@ -10,13 +10,13 @@ import {
 	type ModalPayload,
 	type AnyComponentPayload,
 	InteractionType,
-} from "./types";
+} from "./types.js";
 
-import { DISJSX, type TypedDISJSXComponent } from "./disjsxTypes";
-import { processNode } from "./utils.ts";
-import { getDISJSXType, getProcessedElement } from "./utils.ts";
-import { processChildrenToString } from "./processChildrenToString.ts";
-import { validateComponent, validateUniqueCustomIds } from "./validation";
+import { DISJSX, type TypedDISJSXComponent } from "./disjsxTypes.js";
+import { processNode } from "./utils.js";
+import { getDISJSXType, getProcessedElement } from "./utils.js";
+import { processChildrenToString } from "./processChildrenToString.js";
+import { validateComponent, validateUniqueCustomIds } from "./validation.js";
 
 /**
  * Recursively flattens arrays that may contain nested arrays (from nested fragments).
@@ -37,12 +37,12 @@ const flattenDeep = (arr: unknown[]): AnyComponentPayload[] => {
 };
 
 // Exporting all these in the off chance someone wants to use them directly (idk why you would tho)
-export * from "./disjsxTypes";
-export * from "./types";
-export * from "./utils";
-export * from "./processChildrenToString";
-export * from "./nodes";
-export * from "./validation";
+export * from "./disjsxTypes.js";
+export * from "./types.js";
+export * from "./utils.js";
+export * from "./processChildrenToString.js";
+export * from "./nodes/index.js";
+export * from "./validation.js";
 
 /**
  * Renders a DISJSX `<Message>` element and its children into a Discord message payload object.

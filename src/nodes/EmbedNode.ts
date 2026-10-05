@@ -7,9 +7,9 @@ import {
 	type EmbedImageProps,
 	type EmbedThumbnailProps,
 	type EmbedPayload,
-} from "../types";
-import { DISJSX } from "../disjsxTypes";
-import { type NodeProcessor } from "./types";
+} from "../types.js";
+import { DISJSX } from "../disjsxTypes.js";
+import { type NodeProcessor } from "./types.js";
 
 export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
 	process: (element, _, processChildrenToString, getDISJSXType, getProcessedElement) => {

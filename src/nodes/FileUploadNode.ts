@@ -1,5 +1,5 @@
-import { type FileUploadProps, type FileUploadPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type FileUploadProps, type FileUploadPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const FileUploadNode: NodeProcessor<FileUploadPayload, FileUploadProps> = {
 	process: (element) => {

@@ -1,6 +1,6 @@
 import { type ReactNode, type ReactElement } from "react";
-import { type AnyComponentPayload } from "../types";
-import { DISJSX } from "../disjsxTypes";
+import { type AnyComponentPayload } from "../types.js";
+import { DISJSX } from "../disjsxTypes.js";
 
 export interface NodeProcessor<TPayload = AnyComponentPayload, TProps = unknown> {
 	process: (

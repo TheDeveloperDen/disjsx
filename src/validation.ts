@@ -1,7 +1,7 @@
 // ! I name this file the "horror" file because it's a horror show :3
 // ! I would say "lets split it up like we did with the nodes" but honestly... I'm not sure how to do that.
 
-import { DISJSX } from "./disjsxTypes";
+import { DISJSX } from "./disjsxTypes.js";
 import {
 	ButtonStyle,
 	type MessageProps,
@@ -25,11 +25,11 @@ import {
 	type EmbedFieldProps,
 	type EmbedFieldValueProps,
 	type EmbedFieldTitleProps,
-} from "./types";
+} from "./types.js";
 import type { ReactElement, ReactNode } from "react";
 import { Children, isValidElement, Fragment } from "react";
-import { getDISJSXType, getProcessedElement } from "./utils";
-import { processChildrenToString } from "./processChildrenToString";
+import { getDISJSXType, getProcessedElement } from "./utils.js";
+import { processChildrenToString } from "./processChildrenToString.js";
 
 /**
  * Represents a validation error or warning found during component validation.

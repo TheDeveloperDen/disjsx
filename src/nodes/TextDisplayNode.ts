@@ -1,5 +1,5 @@
-import { type TextDisplayProps, type TextDisplayPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type TextDisplayProps, type TextDisplayPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const TextDisplayNode: NodeProcessor<TextDisplayPayload, TextDisplayProps> = {
 	process: (element, _, processChildrenToString) => {

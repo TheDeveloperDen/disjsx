@@ -1,6 +1,6 @@
 import { Children, isValidElement } from "react";
-import { type LabelProps, type LabelPayload, ComponentType, type AnyComponentPayload } from "../types";
-import { type NodeProcessor } from "./types";
+import { type LabelProps, type LabelPayload, ComponentType, type AnyComponentPayload } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const LabelNode: NodeProcessor<LabelPayload, LabelProps> = {
 	process: (element, processNode) => {

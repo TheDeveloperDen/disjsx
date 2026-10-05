@@ -1,5 +1,5 @@
-import { type ButtonProps, type ButtonPayload, ComponentType, ButtonStyle } from "../types";
-import { type NodeProcessor } from "./types";
+import { type ButtonProps, type ButtonPayload, ComponentType, ButtonStyle } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const ButtonNode: NodeProcessor<ButtonPayload, ButtonProps> = {
 	process: (element) => {

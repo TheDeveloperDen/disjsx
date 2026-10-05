@@ -1,5 +1,5 @@
-import { type ThumbnailProps, type ThumbnailPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type ThumbnailProps, type ThumbnailPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const ThumbnailNode: NodeProcessor<ThumbnailPayload, ThumbnailProps> = {
 	process: (element) => {

@@ -1,5 +1,5 @@
-import { type TextInputProps, type TextInputPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type TextInputProps, type TextInputPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const TextInputNode: NodeProcessor<TextInputPayload, TextInputProps> = {
 	process: (element) => {

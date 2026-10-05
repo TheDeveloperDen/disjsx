@@ -1,6 +1,6 @@
 import { Children } from "react";
-import { type ContainerProps, type ContainerPayload, type AnyComponentPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type ContainerProps, type ContainerPayload, type AnyComponentPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const ContainerNode: NodeProcessor<ContainerPayload, ContainerProps> = {
 	process: (element, processChildNode) => {

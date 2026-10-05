@@ -1,5 +1,5 @@
-import { type SeparatorProps, type SeparatorPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type SeparatorProps, type SeparatorPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const SeparatorNode: NodeProcessor<SeparatorPayload, SeparatorProps> = {
 	process: (element) => {

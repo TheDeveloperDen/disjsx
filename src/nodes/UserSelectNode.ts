@@ -1,5 +1,5 @@
-import { type UserSelectProps, type UserSelectPayload, ComponentType } from "../types";
-import { type NodeProcessor } from "./types";
+import { type UserSelectProps, type UserSelectPayload, ComponentType } from "../types.js";
+import { type NodeProcessor } from "./types.js";
 
 export const UserSelectNode: NodeProcessor<UserSelectPayload, UserSelectProps> = {
 	process: (element) => {
