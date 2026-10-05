@@ -30,8 +30,7 @@
 	},
 	"description": "A library for creating Discord messages in JSX",
 	"files": [
-		"dist/**/*",
-		"index.js"
+		"dist/**/*"
 	],
 	"license": "MIT",
 	"private": false,
