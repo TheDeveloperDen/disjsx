@@ -18,7 +18,7 @@ import { MediaGalleryNode } from "./MediaGalleryNode";
 import { LabelNode } from "./LabelNode";
 import { FileUploadNode } from "./FileUploadNode";
 import { type NodeProcessor } from "./types";
-import type { AnyComponentPayload, EmbedPayload } from "@disjsx/types.ts";
+import type { AnyComponentPayload, EmbedPayload } from "../types.ts";
 
 /**
  * Registry of node processors for main DISJSX components

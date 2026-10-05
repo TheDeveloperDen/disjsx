@@ -13,9 +13,9 @@ import {
 } from "./types";
 
 import { DISJSX, type TypedDISJSXComponent } from "./disjsxTypes";
-import { processNode } from "@disjsx/utils.ts";
-import { getDISJSXType, getProcessedElement } from "@disjsx/utils.ts";
-import { processChildrenToString } from "@disjsx/processChildrenToString.ts";
+import { processNode } from "./utils.ts";
+import { getDISJSXType, getProcessedElement } from "./utils.ts";
+import { processChildrenToString } from "./processChildrenToString.ts";
 import { validateComponent, validateUniqueCustomIds } from "./validation";
 
 /**

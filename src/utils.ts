@@ -1,5 +1,5 @@
-import { nodeProcessors } from "@disjsx/nodes/index.ts";
-import { processChildrenToString } from "@disjsx/processChildrenToString.ts";
+import { nodeProcessors } from "./nodes/index.ts";
+import { processChildrenToString } from "./processChildrenToString.ts";
 import type { DISJSX, TypedDISJSXComponent } from "./disjsxTypes";
 import { isValidElement, type ReactNode, type ReactElement, Fragment, Children } from "react";
 
