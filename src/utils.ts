@@ -136,14 +136,43 @@ export const getProcessedElement = (element: ReactElement, loop: number = 0): Re
 	assertWithinNestingLimit(loop);
 
 	if (typeof element.type === "function" && !("disjsxType" in element.type)) {
+		const cached = renderCache?.get(element.props as object);
+
+		if (cached?.type === element.type) {
+			return cached.processed;
+		}
+
 		const renderedOutput = renderComponent(element.type, element.props);
 
 		if (isValidElement(renderedOutput)) {
-			return getProcessedElement(renderedOutput, loop + 1);
+			const processed = getProcessedElement(renderedOutput, loop + 1);
+
+			renderCache?.set(element.props as object, { type: element.type, processed });
+
+			return processed;
 		}
 
 		throw new TypeError("DISJSX: Functional component wrapper did not return a valid React element.");
 	}
 
 	return element;
+};
+
+/**
+ * Remembers what each custom component element unwrapped to, so it runs once per render instead of once per
+ * pass (validation, duplicate-ID check, rendering).
+ */
+let renderCache: WeakMap<object, { type: ReactElement["type"]; processed: ReactElement }> | null = null;
+
+/** Runs `fn` with a fresh {@link getProcessedElement} cache, restoring the previous one afterwards. */
+export const withRenderCache = <T>(fn: () => T): T => {
+	const previous = renderCache;
+
+	renderCache = new WeakMap();
+
+	try {
+		return fn();
+	} finally {
+		renderCache = previous;
+	}
 };

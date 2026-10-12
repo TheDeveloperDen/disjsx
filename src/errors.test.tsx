@@ -69,3 +69,21 @@ test("warnings go to onWarning and nowhere else", () => {
 	expect(warnings.length).toBeGreaterThan(0);
 	expect(() => renderDiscordMessage(tree)).not.toThrow();
 });
+
+test("custom components run once per render, and again on the next render", () => {
+	let calls = 0;
+	const Leaf = () => {
+		calls++;
+		return <TextDisplay>hi</TextDisplay>;
+	};
+	const tree = (
+		<Message isV2>
+			<Leaf />
+		</Message>
+	);
+
+	renderDiscordMessage(tree);
+	expect(calls).toBe(1);
+	renderDiscordMessage(tree);
+	expect(calls).toBe(2);
+});

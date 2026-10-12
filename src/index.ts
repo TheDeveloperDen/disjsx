@@ -14,7 +14,7 @@ import { DISJSX, isDISJSXElement } from "./disjsxTypes.js";
 import { getChildren, getProp } from "./children.js";
 import { processNode } from "./utils.js";
 import { flattenProcessed } from "./nodes/types.js";
-import { getDISJSXType, getProcessedElement } from "./utils.js";
+import { getDISJSXType, getProcessedElement, withRenderCache } from "./utils.js";
 import { processChildrenToString } from "./processChildrenToString.js";
 import {
 	DisJSXValidationError,
@@ -50,6 +50,8 @@ export type RenderOptions = {
  * For legacy messages, it populates `content`, `embeds`, and `components` fields
  * based on the DISJSX children (`<Content>`, `<Embed>`, `<ActionRow>`).
  *
+ * Custom components are called once per render, however many passes need their output.
+ *
  * @param messageElement The root `<Message>` React element or a component that renders to a Message element.
  * @param options See {@link RenderOptions}.
  * @returns A `LegacyMessagePayload` or `V2MessagePayload` object. Unset webhook fields (`username`, `avatar_url`, `tts`) and `flags` are omitted.
@@ -57,9 +59,12 @@ export type RenderOptions = {
  * @throws {TypeError} If the root is not a `<Message>`, or a custom component returns something other than an element.
  * @throws {RangeError} If custom components are nested too deeply.
  */
-export const renderDiscordMessage = (
+export const renderDiscordMessage = (messageElement: ReactElement, options: RenderOptions = {}) =>
+	withRenderCache(() => renderMessage(messageElement, options));
+
+const renderMessage = (
 	messageElement: ReactElement,
-	options: RenderOptions = {},
+	options: RenderOptions,
 ): LegacyMessagePayload | V2MessagePayload => {
 	const { validate = true, onWarning } = options;
 
@@ -205,10 +210,10 @@ export const renderDiscordMessage = (
  * @throws {TypeError} If the root is not a `<Modal>`, a `<Label>` has no child, or a custom component returns something other than an element.
  * @throws {RangeError} If custom components are nested too deeply.
  */
-export const renderDiscordModal = (
-	modalElement: ReactElement,
-	options: RenderOptions = {},
-): APIModalInteractionResponseCallbackData => {
+export const renderDiscordModal = (modalElement: ReactElement, options: RenderOptions = {}) =>
+	withRenderCache(() => renderModal(modalElement, options));
+
+const renderModal = (modalElement: ReactElement, options: RenderOptions): APIModalInteractionResponseCallbackData => {
 	const { validate = true, onWarning } = options;
 
 	const processedModalElement = getProcessedElement(modalElement);
