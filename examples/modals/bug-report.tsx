@@ -1,16 +1,9 @@
-import {
-	renderDiscordModal,
-	Modal,
-	Label,
-	TextInput,
-	TextInputStyle,
-	FileUpload,
-	TextDisplay,
-} from "disjsx";
+import { TextInputStyle } from "discord-api-types/v10";
+import { renderDiscordModal, Modal, Label, TextInput, FileUpload, TextDisplay } from "disjsx";
 
 /**
  * Example: Bug Report Modal with FileUpload
- * 
+ *
  * This demonstrates:
  * - TextDisplay component for modal instructions
  * - Label with TextInput for text description
@@ -24,10 +17,7 @@ const BugReportModal = () => {
 				Please provide detailed information about the bug you encountered. **Screenshots are required!**
 			</TextDisplay>
 
-			<Label
-				label="Description of the bug"
-				description="Please describe the cause and effects of the bug"
-			>
+			<Label label="Description of the bug" description="Please describe the cause and effects of the bug">
 				<TextInput
 					customId="description"
 					style={TextInputStyle.Paragraph}
@@ -37,10 +27,7 @@ const BugReportModal = () => {
 				/>
 			</Label>
 
-			<Label
-				label="Steps to reproduce"
-				description="How can we reproduce this bug?"
-			>
+			<Label label="Steps to reproduce" description="How can we reproduce this bug?">
 				<TextInput
 					customId="steps"
 					style={TextInputStyle.Paragraph}

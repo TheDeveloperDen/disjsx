@@ -1,3 +1,4 @@
+import { ChannelType, SelectMenuDefaultValueType } from "discord-api-types/v10";
 import {
 	Message,
 	ActionRow,
@@ -6,7 +7,6 @@ import {
 	MentionableSelect,
 	ChannelSelect,
 	renderDiscordMessage,
-	ChannelTypes,
 } from "disjsx";
 
 const SelectMenusMessage = () => {
@@ -18,7 +18,7 @@ const SelectMenusMessage = () => {
 					placeholder="Select a user"
 					minValues={1}
 					maxValues={5}
-					defaultValues={[{ id: "123456789012345678", type: "user" }]}
+					defaultValues={[{ id: "123456789012345678", type: SelectMenuDefaultValueType.User }]}
 				/>
 			</ActionRow>
 			<ActionRow>
@@ -31,7 +31,7 @@ const SelectMenusMessage = () => {
 				<ChannelSelect
 					customId="channel_select"
 					placeholder="Select a channel"
-					channelTypes={[ChannelTypes.GuildText, ChannelTypes.GuildAnnouncement]}
+					channelTypes={[ChannelType.GuildText, ChannelType.GuildAnnouncement]}
 				/>
 			</ActionRow>
 		</Message>

@@ -1,7 +1,9 @@
-import { type FileUploadProps, type FileUploadPayload, ComponentType } from "../types.js";
+import { type FileUploadProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APIFileUploadComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const FileUploadNode: NodeProcessor<FileUploadPayload, FileUploadProps> = {
+export const FileUploadNode: NodeProcessor<APIFileUploadComponent, FileUploadProps> = {
 	process: (element) => {
 		const fileUploadProps = element.props;
 
@@ -15,5 +17,3 @@ export const FileUploadNode: NodeProcessor<FileUploadPayload, FileUploadProps> =
 		};
 	},
 };
-
-

@@ -1,18 +1,14 @@
 import { Children, isValidElement } from "react";
-import {
-	type MediaGalleryProps,
-	type MediaGalleryItemProps,
-	type MediaGalleryPayload,
-	type MediaGalleryItemPayload,
-	ComponentType,
-} from "../types.js";
-import { DISJSX } from "../disjsxTypes.js";
+import { type MediaGalleryProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import { DISJSX, isDISJSXElement } from "../disjsxTypes.js";
+import type { APIMediaGalleryComponent, APIMediaGalleryItem } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const MediaGalleryNode: NodeProcessor<MediaGalleryPayload, MediaGalleryProps> = {
-	process: (element, _, __, getDISJSXType, getProcessedElement) => {
+export const MediaGalleryNode: NodeProcessor<APIMediaGalleryComponent, MediaGalleryProps> = {
+	process: (element, _, __, ___, getProcessedElement) => {
 		const galleryProps = element.props;
-		const items: MediaGalleryItemPayload[] = [];
+		const items: APIMediaGalleryItem[] = [];
 
 		for (const rawChildNode of Children.toArray(galleryProps.children)) {
 			if (!isValidElement(rawChildNode)) {
@@ -20,10 +16,10 @@ export const MediaGalleryNode: NodeProcessor<MediaGalleryPayload, MediaGalleryPr
 			}
 			const childNode = getProcessedElement(rawChildNode);
 
-			if (getDISJSXType(childNode) !== DISJSX.MediaGalleryItem) {
+			if (!isDISJSXElement(childNode, DISJSX.MediaGalleryItem)) {
 				continue;
 			}
-			const itemProps = childNode.props as MediaGalleryItemProps;
+			const itemProps = childNode.props;
 
 			items.push({
 				media: {

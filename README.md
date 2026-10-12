@@ -760,7 +760,7 @@ const modal = (
 				required
 			/>
 		</Label>
-		
+
 		<Label label="Bio" description="Tell the community about yourself">
 			<TextInput
 				customId="bio"
@@ -785,9 +785,7 @@ import { Modal, Label, TextInput, TextInputStyle, FileUpload, TextDisplay, rende
 
 const bugReportModal = (
 	<Modal title="Bug Report" customId="bug_report_modal">
-		<TextDisplay>
-			Please provide detailed information about the bug. **Screenshots are required!**
-		</TextDisplay>
+		<TextDisplay>Please provide detailed information about the bug. **Screenshots are required!**</TextDisplay>
 
 		<Label label="Description of the bug" description="Please describe the cause and effects">
 			<TextInput
@@ -811,15 +809,20 @@ const bugReportModal = (
 Labels can wrap any interactive component, including select menus:
 
 ```tsx
-import { Modal, Label, UserSelect, RoleSelect, ChannelSelect, ChannelTypes, TextDisplay, renderDiscordModal } from "disjsx";
+import {
+	Modal,
+	Label,
+	UserSelect,
+	RoleSelect,
+	ChannelSelect,
+	ChannelTypes,
+	TextDisplay,
+	renderDiscordModal,
+} from "disjsx";
 
 const roleAssignmentModal = (
 	<Modal title="Assign Roles" customId="role_assignment_modal">
-		<TextDisplay>
-			## Role Assignment Tool
-			
-			Select users, roles, and notification channel below.
-		</TextDisplay>
+		<TextDisplay>## Role Assignment Tool Select users, roles, and notification channel below.</TextDisplay>
 
 		<Label label="Select Users" description="Choose users to assign roles to">
 			<UserSelect customId="users_selected" maxValues={10} required />
@@ -861,13 +864,8 @@ import {
 const contentSubmissionModal = (
 	<Modal title="Submit Content" customId="content_submission_modal">
 		<TextDisplay>
-			# Content Submission Form
-			
-			Submit your creative content to be featured!
-			
-			**Guidelines:**
-			- Original content only
-			- Must follow community guidelines
+			# Content Submission Form Submit your creative content to be featured! **Guidelines:** - Original content only -
+			Must follow community guidelines
 		</TextDisplay>
 
 		<Label label="Content Title">
@@ -917,6 +915,7 @@ The `examples/modals/` directory contains complete, runnable examples:
 - **`content-submission.tsx`** - Complex submission form with all component types
 
 Run any example with:
+
 ```bash
 bun run examples/modals/feedback-form.tsx
 ```

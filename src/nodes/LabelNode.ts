@@ -1,21 +1,23 @@
 import { Children, isValidElement } from "react";
-import { type LabelProps, type LabelPayload, ComponentType, type AnyComponentPayload } from "../types.js";
-import { type NodeProcessor } from "./types.js";
+import { type LabelProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APIComponentInLabel, APILabelComponent } from "discord-api-types/v10";
+import { flattenProcessed, type NodeProcessor } from "./types.js";
 
-export const LabelNode: NodeProcessor<LabelPayload, LabelProps> = {
+export const LabelNode: NodeProcessor<APILabelComponent, LabelProps, APIComponentInLabel> = {
 	process: (element, processNode) => {
 		const labelProps = element.props;
 		const children = Children.toArray(labelProps.children);
 
 		// Find the first valid child component
-		let component: AnyComponentPayload | null = null;
+		let component: APIComponentInLabel | null = null;
 
 		for (const child of children) {
 			if (isValidElement(child)) {
-				const processed = processNode(child);
+				const [processed] = flattenProcessed(processNode(child));
 
-				if (processed && typeof processed === "object") {
-					component = processed as AnyComponentPayload;
+				if (processed) {
+					component = processed;
 					break;
 				}
 			}
@@ -35,4 +37,3 @@ export const LabelNode: NodeProcessor<LabelPayload, LabelProps> = {
 		};
 	},
 };
-

@@ -1,10 +1,10 @@
+import { ButtonStyle } from "discord-api-types/v10";
 import {
 	Message,
 	ActionRow,
 	Button,
 	StringSelect,
 	SelectOption,
-	ButtonStyle,
 	Colors,
 	renderDiscordMessage,
 	Embed,

@@ -1,3 +1,4 @@
+import { ButtonStyle } from "discord-api-types/v10";
 import {
 	Message,
 	Section,
@@ -5,7 +6,6 @@ import {
 	Button,
 	Container,
 	ActionRow,
-	ButtonStyle,
 	StringSelect,
 	SelectOption,
 	UserSelect,
@@ -87,22 +87,11 @@ const InteractiveV2Message = () => {
 			</ActionRow>
 
 			<ActionRow>
-				<UserSelect
-					customId="user_picker"
-					placeholder="Select users to notify"
-					minValues={1}
-					maxValues={5}
-				/>
+				<UserSelect customId="user_picker" placeholder="Select users to notify" minValues={1} maxValues={5} />
 			</ActionRow>
 
 			<ActionRow>
-				<RoleSelect
-					customId="role_picker"
-					placeholder="Select roles"
-					minValues={0}
-					maxValues={3}
-					disabled
-				/>
+				<RoleSelect customId="role_picker" placeholder="Select roles" minValues={0} maxValues={3} disabled />
 			</ActionRow>
 
 			<TextDisplay>### Mixed Interactive Layout</TextDisplay>

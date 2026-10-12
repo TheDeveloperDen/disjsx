@@ -1,142 +1,19 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 
+import type {
+	APIActionRowComponent,
+	APIComponentInMessageActionRow,
+	APIEmbed,
+	APIMessageTopLevelComponent,
+	APISelectMenuDefaultValue,
+	ButtonStyle,
+	ChannelType,
+	SelectMenuDefaultValueType,
+	TextInputStyle,
+} from "discord-api-types/v10";
 import type { ReactElement } from "react";
 
 import type { ReactNode } from "react";
-
-/**
- * @see {@link https://discord.com/developers/docs/resources/channel#message-object-message-flags}
- * taken from "discord-api-types": @see {@link https://github.com/discordjs/discord-api-types/blob/main/payloads/v10/channel.ts#L887}
- */
-export enum MessageFlags {
-	/**
-	 * This message has been published to subscribed channels (via Channel Following)
-	 */
-	Crossposted = 1 << 0,
-	/**
-	 * This message originated from a message in another channel (via Channel Following)
-	 */
-	IsCrosspost = 1 << 1,
-	/**
-	 * Do not include any embeds when serializing this message
-	 */
-	SuppressEmbeds = 1 << 2,
-	/**
-	 * The source message for this crosspost has been deleted (via Channel Following)
-	 */
-	SourceMessageDeleted = 1 << 3,
-	/**
-	 * This message came from the urgent message system
-	 */
-	Urgent = 1 << 4,
-	/**
-	 * This message has an associated thread, which shares its id
-	 */
-	HasThread = 1 << 5,
-	/**
-	 * This message is only visible to the user who invoked the Interaction
-	 */
-	Ephemeral = 1 << 6,
-	/**
-	 * This message is an Interaction Response and the bot is "thinking"
-	 */
-	Loading = 1 << 7,
-	/**
-	 * This message failed to mention some roles and add their members to the thread
-	 */
-	FailedToMentionSomeRolesInThread = 1 << 8,
-	/**
-	 * @unstable This message flag is currently not documented by Discord but has a known value which we will try to keep up to date.
-	 */
-	ShouldShowLinkNotDiscordWarning = 1 << 10,
-	/**
-	 * This message will not trigger push and desktop notifications
-	 */
-	SuppressNotifications = 1 << 12,
-	/**
-	 * This message is a voice message
-	 */
-	IsVoiceMessage = 1 << 13,
-	/**
-	 * This message has a snapshot (via Message Forwarding)
-	 */
-	HasSnapshot = 1 << 14,
-	/**
-	 * Allows you to create fully component-driven messages
-	 */
-	IsComponentsV2 = 1 << 15,
-}
-
-/**
- * Enum representing the different types of message components.
- * @see {@link https://discord.com/developers/docs/interactions/message-components#component-object-component-types}
- */
-export enum ComponentType {
-	/** Container to display a row of interactive components. */
-	ActionRow = 1,
-	/** Button object. */
-	Button = 2,
-	/** Select menu for picking from defined text options. */
-	StringSelect = 3,
-	/** Text input object. */
-	TextInput = 4,
-	/** Select menu for users. */
-	UserSelect = 5,
-	/** Select menu for roles. */
-	RoleSelect = 6,
-	/** Select menu for mentionables (users and roles). */
-	MentionableSelect = 7,
-	/** Select menu for channels. */
-	ChannelSelect = 8,
-	/** Container to display text alongside an accessory component. */
-	Section = 9,
-	/** Markdown text. */
-	TextDisplay = 10,
-	/** Small image that can be used as an accessory. */
-	Thumbnail = 11,
-	/** Display images and other media. */
-	MediaGallery = 12,
-	/** Displays an attached file. */
-	File = 13,
-	/** Component to add vertical padding between other components. */
-	Separator = 14,
-	/** Container that visually groups a set of components. */
-	Container = 17,
-	/** Container associating a label and description with a component (modals). */
-	Label = 18,
-	/** File upload component for modals. */
-	FileUpload = 19,
-}
-
-/**
- * Enum representing the different styles for a button component.
- * @see {@link https://discord.com/developers/docs/interactions/message-components#button-button-styles}
- */
-export enum ButtonStyle {
-	/** The most important or recommended action in a group of options. Requires `custom_id`. */
-	Primary = 1,
-	/** Alternative or supporting actions. Requires `custom_id`. */
-	Secondary = 2,
-	/** Positive confirmation or completion actions. Requires `custom_id`. */
-	Success = 3,
-	/** An action with irreversible consequences. Requires `custom_id`. */
-	Danger = 4,
-	/** Navigates to a URL. Requires `url`. */
-	Link = 5,
-	/** Purchase button. Requires `sku_id`. */
-	Premium = 6,
-}
-
-/**
- * Enum representing the different styles for a text input component.
- * @see {@link https://discord.com/developers/docs/interactions/message-components#text-input-text-input-styles}
- */
-export enum TextInputStyle {
-	/** Single-line input. */
-	Short = 1,
-	/** Multi-line input. */
-	Paragraph = 2,
-}
 
 /**
  * Some default colors for embeds to help you get started.
@@ -185,59 +62,6 @@ export enum Colors {
 	TrueBlack = 0x000000,
 }
 
-export enum ChannelTypes {
-	/** A text channel within a server. */
-	GuildText = 0,
-	/** A direct message between users. */
-	Dm = 1,
-	/** A voice channel within a server. */
-	GuildVoice = 2,
-	/** A group direct message. */
-	GroupDm = 3,
-	/** A category channel within a server. */
-	GuildCategory = 4,
-	/** An announcement channel within a server. */
-	GuildAnnouncement = 5,
-	/** A thread in an announcement channel. */
-	AnnouncementThread = 10,
-	/** A public thread in a text channel. */
-	PublicThread = 11,
-	/** A private thread in a text channel. */
-	PrivateThread = 12,
-	/** A stage channel within a server. */
-	GuildStageVoice = 13,
-	GuildDirectory = 14,
-	/** A forum channel within a server. */
-	GuildForum = 15,
-	/** A media channel within a server. */
-	GuildMedia = 16,
-}
-
-/**
- * An interaction callback type
- * @see {@link https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-response-object-interaction-callback-type}
- */
-export enum InteractionType {
-	/** Acknowledge a ping */
-	Pong = 1,
-	/** Respond to an interaction with a message */
-	ChannelMessageWithSource = 4,
-	/** Acknowledge an interaction and edit a response later, the user sees a loading state */
-	DeferredChannelMessageWithSource = 5,
-	/** Acknowledge an interaction and edit a response later, the user sees a loading state */
-	DeferredUpdateMessage = 6,
-	/** For components, acknowledge an interaction and edit the original message later; the user does not see a loading state */
-	UpdateMessage = 7,
-	/** For components, edit the message the component was attached to */
-	ApplicationCommandAutocompleteResult = 8,
-	/** Respond to an interaction with a popup modal */
-	Modal = 9,
-	/** Deprecated; respond to an interaction with an upgrade button, only available for apps with monetization enabled */
-	PremiumRequired = 10,
-	/** Launch the Activity associated with the app. Only available for apps with Activities enabled */
-	LaunchActivity = 12,
-}
-
 /**
  * Represents a partial emoji object.
  * @see {@link https://discord.com/developers/docs/resources/emoji#emoji-object}
@@ -249,45 +73,6 @@ interface EmojiObject {
 	name?: string;
 	/** Whether this emoji is animated. */
 	animated?: boolean;
-}
-
-/**
- * Represents an unfurled media item, used in Thumbnails, Media Galleries, and Files.
- * @see {@link https://discord.com/developers/docs/interactions/message-components#unfurled-media-item-structure}
- */
-interface UnfurledMediaItem {
-	/**
-	 * URL of the media. Supports arbitrary URLs and `attachment://<filename>` references.
-	 * For File components, this only supports `attachment://<filename>`.
-	 */
-	url: string;
-	/** Proxied URL of the media item. (Provided by API, ignored in requests). */
-	proxy_url?: string;
-	/** Height of the media item. (Provided by API, ignored in requests). */
-	height?: number;
-	/** Width of the media item. (Provided by API, ignored in requests). */
-	width?: number;
-	/** Media type of the content. (Provided by API, ignored in requests). */
-	content_type?: string;
-}
-
-/**
- * Base interface for all component objects.
- * @see {@link https://discord.com/developers/docs/interactions/message-components#component-object}
- */
-interface BaseComponent {
-	/** The type of the component. */
-	type: ComponentType;
-	/** Optional 32-bit integer identifier for the component. Generated sequentially if empty. */
-	id?: number;
-}
-
-/**
- * Base interface for interactive components that require a `custom_id`.
- */
-interface InteractiveComponent extends BaseComponent {
-	/** Developer-defined identifier for the component, max 100 characters. Must be unique per component on a message. */
-	custom_id: string;
 }
 
 /**
@@ -307,18 +92,6 @@ export interface ActionRowProps {
 	id?: number;
 }
 /**
- * Payload structure for an Action Row component.
- */
-interface ActionRowPayload extends BaseComponent {
-	type: ComponentType.ActionRow;
-	/**
-	 * Array of components within the Action Row.
-	 * Can be up to 5 Button components, or a single Select Menu component, or a single Text Input component.
-	 */
-	components: AnyComponentPayload[]; // Assuming AnyComponentPayload is a union of all component payloads
-}
-
-/**
  * Props for the Section component.
  * A Section is a top-level layout component that allows joining text contextually with an accessory.
  * Requires the `IS_COMPONENTS_V2` message flag.
@@ -334,17 +107,6 @@ export interface SectionProps {
 	// Note: The accessory (Thumbnail or Button) is part of the payload but not explicitly a prop here.
 	// It's likely handled by specific child components or an internal mechanism.
 }
-/**
- * Payload structure for a Section component.
- */
-interface SectionPayload extends BaseComponent {
-	type: ComponentType.Section;
-	/** One to three Text Display components. */
-	components: TextDisplayPayload[];
-	/** An optional accessory component (Thumbnail or Button). */
-	accessory?: ThumbnailPayload | ButtonPayload;
-}
-
 /**
  * Props for the Container component.
  * A Container is a top-level layout component that visually groups a set of components.
@@ -364,22 +126,6 @@ export interface ContainerProps {
 	id?: number;
 }
 /**
- * Payload structure for a Container component.
- */
-interface ContainerPayload extends BaseComponent {
-	type: ComponentType.Container;
-	/**
-	 * Components within the container.
-	 * Allowed types: Action Row, Text Display, Section, Media Gallery, Separator, File.
-	 */
-	components: AnyComponentPayload[]; // Assuming AnyComponentPayload is a union of specific component payloads
-	/** Color for the accent on the container as an RGB integer. */
-	accent_color?: number;
-	/** Whether the container should be a spoiler. Defaults to `false`. */
-	spoiler?: boolean;
-}
-
-/**
  * Props for the Separator component.
  * A Separator is a top-level layout component that adds vertical padding and visual division.
  * Requires the `IS_COMPONENTS_V2` message flag.
@@ -394,17 +140,6 @@ export interface SeparatorProps {
 	id?: number;
 }
 /**
- * Payload structure for a Separator component.
- */
-interface SeparatorPayload extends BaseComponent {
-	type: ComponentType.Separator;
-	/** Whether a visual divider should be displayed. Defaults to `true`. */
-	divider?: boolean;
-	/** Size of separator padding. Defaults to `1`. */
-	spacing?: 1 | 2;
-}
-
-/**
  * Props for the TextDisplay component.
  * A Text Display is a top-level content component for formatted markdown text.
  * Requires the `IS_COMPONENTS_V2` message flag.
@@ -416,15 +151,6 @@ export interface TextDisplayProps {
 	/** Optional identifier for the component. */
 	id?: number;
 }
-/**
- * Payload structure for a Text Display component.
- */
-interface TextDisplayPayload extends BaseComponent {
-	type: ComponentType.TextDisplay;
-	/** Text that will be displayed, supporting markdown. */
-	content: string;
-}
-
 /**
  * Props for the Thumbnail component.
  * A Thumbnail is a small image used as an accessory in a Section.
@@ -444,19 +170,6 @@ export interface ThumbnailProps {
 	id?: number;
 }
 /**
- * Payload structure for a Thumbnail component.
- */
-interface ThumbnailPayload extends BaseComponent {
-	type: ComponentType.Thumbnail;
-	/** The unfurled media item (URL or attachment). */
-	media: UnfurledMediaItem;
-	/** Alt text for the media, max 1024 characters. */
-	description?: string;
-	/** Whether the thumbnail should be a spoiler. Defaults to `false`. */
-	spoiler?: boolean;
-}
-
-/**
  * Props for an item within a MediaGallery.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#media-gallery-item-structure}
  */
@@ -472,18 +185,6 @@ export interface MediaGalleryItemProps {
 	spoiler?: boolean;
 }
 /**
- * Payload structure for a Media Gallery item.
- */
-interface MediaGalleryItemPayload {
-	/** The unfurled media item (URL or attachment). */
-	media: UnfurledMediaItem;
-	/** Alt text for the media, max 1024 characters. */
-	description?: string;
-	/** Whether the media should be a spoiler. Defaults to `false`. */
-	spoiler?: boolean;
-}
-
-/**
  * Props for the MediaGallery component.
  * A Media Gallery displays 1-10 media attachments in an organized format.
  * Requires the `IS_COMPONENTS_V2` message flag.
@@ -495,15 +196,6 @@ export interface MediaGalleryProps {
 	/** Optional identifier for the component. */
 	id?: number;
 }
-/**
- * Payload structure for a Media Gallery component.
- */
-interface MediaGalleryPayload extends BaseComponent {
-	type: ComponentType.MediaGallery;
-	/** Array of 1 to 10 media gallery items. */
-	items: MediaGalleryItemPayload[];
-}
-
 /**
  * Props for the File component.
  * A File component displays an uploaded file as an attachment.
@@ -521,66 +213,76 @@ export interface FileProps {
 	id?: number;
 }
 /**
- * Payload structure for a File component.
+ * The props every button has, whatever its style.
  */
-interface FilePayload extends BaseComponent {
-	type: ComponentType.File;
-	/**
-	 * The unfurled media item, which uniquely only supports `attachment://<filename>` for its URL.
-	 */
-	file: UnfurledMediaItem;
-	/** Whether the file should be a spoiler. Defaults to `false`. */
-	spoiler?: boolean;
+interface ButtonBaseProps {
+	/** Whether the button is disabled. Defaults to `false`. */
+	disabled?: boolean;
+	/** Optional identifier for the component. */
+	id?: number;
+}
+
+/** The props of buttons that show a label and an emoji (every style except `Premium`). */
+interface LabelledButtonProps extends ButtonBaseProps {
+	/** Text that appears on the button, max 80 characters. Alternative to `label` prop. */
+	children?: string;
+	/** Text that appears on the button, max 80 characters. Alternative to `children` prop. */
+	label?: string;
+	/** Partial emoji object to display on the button. */
+	emoji?: EmojiObject;
+}
+
+/** A button that sends an interaction when clicked. */
+export interface InteractiveButtonProps extends LabelledButtonProps {
+	/** The style of the button. */
+	style: ButtonStyle.Primary | ButtonStyle.Secondary | ButtonStyle.Success | ButtonStyle.Danger;
+	/** Developer-defined identifier, max 100 characters. */
+	customId: string;
+}
+
+/** A button that opens a URL. */
+export interface LinkButtonProps extends LabelledButtonProps {
+	/** The style of the button. */
+	style: ButtonStyle.Link;
+	/** URL to open. */
+	url: string;
+}
+
+/** A purchase button. Premium buttons cannot have a label or an emoji. */
+export interface PremiumButtonProps extends ButtonBaseProps {
+	/** The style of the button. */
+	style: ButtonStyle.Premium;
+	/** Identifier for the purchasable SKU. */
+	skuId: string;
 }
 
 /**
  * Props for the Button component.
  * A Button is an interactive component used in messages.
  * Must be placed inside an Action Row or a Section's accessory field.
+ *
+ * What is required depends on the `style`: `Link` needs a `url`, `Premium` needs a `skuId`,
+ * and every other style needs a `customId`.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#button}
  */
-export interface ButtonProps {
-	/** Text that appears on the button, max 80 characters. Alternative to `label` prop. */
+export type ButtonProps = InteractiveButtonProps | LinkButtonProps | PremiumButtonProps;
+
+/**
+ * Every prop a button can carry, all optional. Validation uses this to report combinations the
+ * {@link ButtonProps} type forbids (for example a Link button with a `customId`), which can still
+ * happen in plain JavaScript or when validation is the only safeguard.
+ */
+export interface AnyButtonProps {
 	children?: string;
-	/** Text that appears on the button, max 80 characters. Alternative to `children` prop. */
 	label?: string;
-	/** The style of the button. */
 	style: ButtonStyle;
-	/** Developer-defined identifier for non-link/non-premium buttons, max 100 characters. */
 	customId?: string;
-	/** URL for link-style buttons. */
 	url?: string;
-	/** Identifier for a purchasable SKU for premium-style buttons. */
 	skuId?: string;
-	/** Partial emoji object to display on the button. */
 	emoji?: EmojiObject;
-	/** Whether the button is disabled. Defaults to `false`. */
 	disabled?: boolean;
-	/** Optional identifier for the component. */
 	id?: number;
 }
-/**
- * Payload structure for a Button component.
- */
-interface ButtonPayload extends BaseComponent, Partial<InteractiveComponent> {
-	// `custom_id` is part of `InteractiveComponent` but optional here due to link/premium buttons
-	type: ComponentType.Button;
-	/** A button style. */
-	style: ButtonStyle;
-	/** Text that appears on the button, max 80 characters. */
-	label?: string;
-	/** Partial emoji object. */
-	emoji?: EmojiObject;
-	/** Developer-defined identifier for the button, max 100 characters. Required for non-link/non-premium styles. */
-	custom_id?: string;
-	/** Identifier for a purchasable SKU. Required for premium style. */
-	sku_id?: string;
-	/** URL for link-style buttons. Required for link style. */
-	url?: string;
-	/** Whether the button is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
 /**
  * Props for an option in a StringSelect menu.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#string-select-menu-select-option-structure}
@@ -599,22 +301,6 @@ export interface SelectOptionProps {
 	/** User-facing name of the option, max 100 characters. Alternative to `label` prop. */
 	children?: string; // Alternative for label
 }
-/**
- * Payload structure for a select option in a String Select Menu.
- */
-interface SelectOptionPayload {
-	/** User-facing name of the option, max 100 characters. */
-	label: string;
-	/** Developer-defined value of the option, max 100 characters. */
-	value: string;
-	/** Additional description of the option, max 100 characters. */
-	description?: string;
-	/** Partial emoji object. */
-	emoji?: EmojiObject;
-	/** Will show this option as selected by default. */
-	default?: boolean;
-}
-
 /**
  * Base props for all select menu components.
  */
@@ -646,39 +332,12 @@ export interface StringSelectProps extends BaseSelectProps {
 	children: React.ReactElement<SelectOptionProps> | React.ReactElement<SelectOptionProps>[];
 }
 /**
- * Payload structure for a String Select Menu component.
- */
-interface StringSelectPayload extends InteractiveComponent {
-	type: ComponentType.StringSelect;
-	/** Specified choices in the select menu, max 25. */
-	options: SelectOptionPayload[];
-	/** Placeholder text if nothing is selected, max 150 characters. */
-	placeholder?: string;
-	/** Minimum number of items that must be chosen (0-25). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of items that can be chosen (1-25). Defaults to 1. */
-	max_values?: number;
-	/** Whether the select menu is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
-/**
- * Structure for default values in auto-populated select menus (User, Role, Channel, Mentionable).
- * @see {@link https://discord.com/developers/docs/interactions/message-components#select-menu-object-select-default-value-structure}
- */
-interface SelectDefaultValue {
-	/** ID of a user, role, or channel. */
-	id: string; // Snowflake
-	/** Type of value that `id` represents. */
-	type: "user" | "role" | "channel";
-}
-
-/**
  * Base props for auto-populated select menus (User, Role, Mentionable, Channel).
  */
-export interface AutoPopulatedSelectProps extends BaseSelectProps {
+export interface AutoPopulatedSelectProps<TValue extends SelectMenuDefaultValueType = SelectMenuDefaultValueType>
+	extends BaseSelectProps {
 	/** List of default values. Number of values must be between `minValues` and `maxValues`. */
-	defaultValues?: SelectDefaultValue[];
+	defaultValues?: APISelectMenuDefaultValue<TValue>[];
 }
 
 /**
@@ -687,101 +346,32 @@ export interface AutoPopulatedSelectProps extends BaseSelectProps {
  * Must be placed inside an Action Row.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#user-select-menu}
  */
-export interface UserSelectProps extends AutoPopulatedSelectProps {}
-/**
- * Payload structure for a User Select Menu component.
- */
-interface UserSelectPayload extends InteractiveComponent {
-	type: ComponentType.UserSelect;
-	/** Placeholder text if nothing is selected, max 150 characters. */
-	placeholder?: string;
-	/** List of default user IDs. */
-	default_values?: SelectDefaultValue[];
-	/** Minimum number of users that must be chosen (0-25). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of users that can be chosen (1-25). Defaults to 1. */
-	max_values?: number;
-	/** Whether the select menu is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
+export interface UserSelectProps extends AutoPopulatedSelectProps<SelectMenuDefaultValueType.User> {}
 /**
  * Props for the RoleSelect component.
  * Allows users to select one or more roles.
  * Must be placed inside an Action Row.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#role-select-menu}
  */
-export interface RoleSelectProps extends AutoPopulatedSelectProps {}
-/**
- * Payload structure for a Role Select Menu component.
- */
-interface RoleSelectPayload extends InteractiveComponent {
-	type: ComponentType.RoleSelect;
-	/** Placeholder text if nothing is selected, max 150 characters. */
-	placeholder?: string;
-	/** List of default role IDs. */
-	default_values?: SelectDefaultValue[];
-	/** Minimum number of roles that must be chosen (0-25). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of roles that can be chosen (1-25). Defaults to 1. */
-	max_values?: number;
-	/** Whether the select menu is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
+export interface RoleSelectProps extends AutoPopulatedSelectProps<SelectMenuDefaultValueType.Role> {}
 /**
  * Props for the MentionableSelect component.
  * Allows users to select one or more mentionables (users and roles).
  * Must be placed inside an Action Row.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#mentionable-select-menu}
  */
-export interface MentionableSelectProps extends AutoPopulatedSelectProps {}
-/**
- * Payload structure for a Mentionable Select Menu component.
- */
-interface MentionableSelectPayload extends InteractiveComponent {
-	type: ComponentType.MentionableSelect;
-	/** Placeholder text if nothing is selected, max 150 characters. */
-	placeholder?: string;
-	/** List of default user/role IDs. */
-	default_values?: SelectDefaultValue[];
-	/** Minimum number of items that must be chosen (0-25). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of items that can be chosen (1-25). Defaults to 1. */
-	max_values?: number;
-	/** Whether the select menu is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
+export interface MentionableSelectProps
+	extends AutoPopulatedSelectProps<SelectMenuDefaultValueType.User | SelectMenuDefaultValueType.Role> {}
 /**
  * Props for the ChannelSelect component.
  * Allows users to select one or more channels.
  * Must be placed inside an Action Row.
  * @see {@link https://discord.com/developers/docs/interactions/message-components#channel-select-menu}
  */
-export interface ChannelSelectProps extends AutoPopulatedSelectProps {
+export interface ChannelSelectProps extends AutoPopulatedSelectProps<SelectMenuDefaultValueType.Channel> {
 	/** List of channel types to include in the select menu. */
-	channelTypes?: number[]; // Array of channel type integers
+	channelTypes?: ChannelType[]; // Array of channel type integers
 }
-/**
- * Payload structure for a Channel Select Menu component.
- */
-interface ChannelSelectPayload extends InteractiveComponent {
-	type: ComponentType.ChannelSelect;
-	/** List of channel types to include. */
-	channel_types?: number[];
-	/** Placeholder text if nothing is selected, max 150 characters. */
-	placeholder?: string;
-	/** List of default channel IDs. */
-	default_values?: SelectDefaultValue[];
-	/** Minimum number of channels that must be chosen (0-25). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of channels that can be chosen (1-25). Defaults to 1. */
-	max_values?: number;
-	/** Whether the select menu is disabled. Defaults to `false`. */
-	disabled?: boolean;
-}
-
 /** Props for a text input component (used in modals). */
 export interface TextInputProps {
 	/** Developer-defined identifier for the input, max 100 characters. */
@@ -804,25 +394,6 @@ export interface TextInputProps {
 	id?: number;
 }
 
-/** Payload for a text input component. */
-interface TextInputPayload extends InteractiveComponent {
-	type: ComponentType.TextInput;
-	/** The Text Input Style. */
-	style: TextInputStyle;
-	/** Label for this component, max 45 characters. */
-	label?: string;
-	/** Minimum input length for a text input; min 0, max 4000. */
-	min_length?: number;
-	/** Maximum input length for a text input; min 1, max 4000. */
-	max_length?: number;
-	/** Whether this component is required to be filled. Defaults to `true`. */
-	required?: boolean;
-	/** Pre-filled value for this component, max 4000 characters. */
-	value?: string;
-	/** Custom placeholder text if the input is empty, max 100 characters. */
-	placeholder?: string;
-}
-
 /**
  * Props for the Label component (used in modals).
  * A Label wraps modal components with text as a label and optional description.
@@ -840,17 +411,6 @@ export interface LabelProps {
 	children: React.ReactNode;
 	/** Optional identifier for the component. */
 	id?: number;
-}
-
-/** Payload structure for a Label component. */
-interface LabelPayload extends BaseComponent {
-	type: ComponentType.Label;
-	/** The label text, max 45 characters. */
-	label: string;
-	/** Optional description text for the label, max 100 characters. */
-	description?: string;
-	/** The component within the label. */
-	component: AnyComponentPayload;
 }
 
 /**
@@ -871,17 +431,6 @@ export interface FileUploadProps {
 	id?: number;
 }
 
-/** Payload structure for a FileUpload component. */
-interface FileUploadPayload extends InteractiveComponent {
-	type: ComponentType.FileUpload;
-	/** Minimum number of files that must be uploaded (0-10). Defaults to 1. */
-	min_values?: number;
-	/** Maximum number of files that can be uploaded (1-10). Defaults to 1. */
-	max_values?: number;
-	/** Whether the file upload is required. Defaults to `true`. */
-	required?: boolean;
-}
-
 /** Props for the author section of an embed. */
 export interface EmbedAuthorProps {
 	/** Name of the author. */
@@ -891,13 +440,6 @@ export interface EmbedAuthorProps {
 	/** URL of the author icon. */
 	iconUrl?: string;
 }
-/** Payload for the author section of an embed. */
-interface EmbedAuthorPayload {
-	name: string;
-	url?: string;
-	icon_url?: string;
-}
-
 /** Props for the footer section of an embed. */
 export interface EmbedFooterProps {
 	/** Text content of the footer. Alternative to `text` prop. */
@@ -907,32 +449,16 @@ export interface EmbedFooterProps {
 	/** Text content of the footer. Alternative to `children` prop. */
 	text?: string;
 }
-/** Payload for the footer section of an embed. */
-interface EmbedFooterPayload {
-	text: string;
-	icon_url?: string;
-}
-
 /** Props for the image section of an embed. */
 export interface EmbedImageProps {
 	/** URL of the image. */
 	url: string;
 }
-/** Payload for the image section of an embed. */
-interface EmbedImagePayload {
-	url: string;
-}
-
 /** Props for the thumbnail section of an embed. */
 export interface EmbedThumbnailProps {
 	/** URL of the thumbnail. */
 	url: string;
 }
-/** Payload for the thumbnail section of an embed. */
-interface EmbedThumbnailPayload {
-	url: string;
-}
-
 /** Props for the title of an embed field. */
 export interface EmbedFieldTitleProps {
 	/** Content for the field title. */
@@ -959,16 +485,6 @@ export interface EmbedFieldProps {
 	 */
 	children?: React.ReactNode;
 }
-/** Payload for a field in an embed. */
-interface EmbedFieldPayload {
-	/** Name of the field (max 256 characters). */
-	name: string;
-	/** Value of the field (max 1024 characters). */
-	value: string;
-	/** Whether this field should display inline. */
-	inline?: boolean;
-}
-
 /** Props for a collection of embed fields. */
 export interface EmbedFieldsProps {
 	/** One or more EmbedFieldProps elements. */
@@ -1007,30 +523,6 @@ export interface EmbedProps {
 	 */
 	children?: React.ReactNode;
 }
-/** Payload structure for an embed object. */
-interface EmbedPayload {
-	/** Title of embed (max 256 characters). */
-	title?: string;
-	/** Description of embed (max 4096 characters). */
-	description?: string;
-	/** URL of embed. */
-	url?: string;
-	/** Timestamp of embed content (ISO8601 string). */
-	timestamp?: string;
-	/** Color code of the embed. */
-	color?: number;
-	/** Footer information. */
-	footer?: EmbedFooterPayload;
-	/** Image information. */
-	image?: EmbedImagePayload;
-	/** Thumbnail information. */
-	thumbnail?: EmbedThumbnailPayload;
-	/** Author information. */
-	author?: EmbedAuthorPayload;
-	/** Fields information (max 25 fields). */
-	fields?: EmbedFieldPayload[];
-}
-
 /**
  * Props for the main text content of a legacy message.
  */
@@ -1052,27 +544,6 @@ export interface ModalProps {
 	 * Child components. Can contain Label (recommended), TextDisplay, or ActionRow (deprecated) components.
 	 */
 	children: React.ReactNode;
-}
-
-/**
- * Payload structure for a modal.
- */
-interface ModalData {
-	/** The title of the popup modal, max 45 characters. */
-	title: string;
-	/** Developer-defined identifier for the modal, max 100 characters. */
-	custom_id: string;
-	/** Array of components (Label, TextDisplay, or ActionRow). */
-	components: AnyComponentPayload[];
-}
-
-/**
- * The actual payload for a modal
- * @see {@link https://discord.com/developers/docs/interactions/receiving-and-responding#responding-to-an-interaction}
- */
-interface ModalPayload {
-	type: InteractionType.Modal;
-	data: ModalData;
 }
 
 /**
@@ -1102,6 +573,8 @@ export interface MessageProps {
 	flags?: number;
 }
 
+export type ReactNodeType<T = unknown> = ReactElement<T> | ReactNode;
+
 /** Base payload for a message. */
 interface BaseMessagePayload {
 	username?: string;
@@ -1117,9 +590,9 @@ interface LegacyMessagePayload extends BaseMessagePayload {
 	/** The message contents (up to 2000 characters). */
 	content?: string;
 	/** Array of up to 10 embed objects. */
-	embeds?: EmbedPayload[];
+	embeds?: APIEmbed[];
 	/** Array of up to 5 Action Row components. */
-	components?: ActionRowPayload[];
+	components?: APIActionRowComponent<APIComponentInMessageActionRow>[];
 	/** Message flags. */
 	flags?: number;
 }
@@ -1133,61 +606,27 @@ interface LegacyMessagePayload extends BaseMessagePayload {
  */
 interface V2MessagePayload extends BaseMessagePayload {
 	/** Array of components. Max 40 total components. */
-	components: AnyComponentPayload[]; // Union of all V2 component payloads
+	components: APIMessageTopLevelComponent[];
 	/** Message flags. Must include `1 << 15` (IS_COMPONENTS_V2). */
 	flags?: number;
 }
 
-type AnyComponentPayload =
-	| ActionRowPayload
-	| ButtonPayload
-	| StringSelectPayload
-	| UserSelectPayload
-	| RoleSelectPayload
-	| MentionableSelectPayload
-	| ChannelSelectPayload
-	| TextInputPayload
-	| SectionPayload
-	| TextDisplayPayload
-	| ThumbnailPayload
-	| MediaGalleryPayload
-	| FilePayload
-	| SeparatorPayload
-	| ContainerPayload
-	| LabelPayload
-	| FileUploadPayload;
+export type { EmojiObject, BaseSelectProps, BaseMessagePayload, LegacyMessagePayload, V2MessagePayload };
 
-export type {
-	EmojiObject,
-	UnfurledMediaItem,
-	BaseComponent,
-	EmbedPayload,
-	BaseMessagePayload,
-	LegacyMessagePayload,
-	V2MessagePayload,
-	ModalData,
-	AnyComponentPayload,
-	ActionRowPayload,
-	ButtonPayload,
-	StringSelectPayload,
-	UserSelectPayload,
-	RoleSelectPayload,
-	MentionableSelectPayload,
-	ChannelSelectPayload,
-	TextInputPayload,
-	SectionPayload,
-	TextDisplayPayload,
-	ThumbnailPayload,
-	MediaGalleryPayload,
-	FilePayload,
-	SeparatorPayload,
-	ContainerPayload,
-	LabelPayload,
-	FileUploadPayload,
-	SelectOptionPayload,
-	BaseSelectProps,
-	MediaGalleryItemPayload,
-	ModalPayload,
-};
+/**
+ * Props that DISJSX reads from plain HTML tags when turning children into markdown
+ * (see `processChildrenToString`), declared so JSX accepts them.
+ */
+declare module "react" {
+	interface HTMLAttributes<T> {
+		/** The language of a code block, used for the syntax highlighting after the opening fence. Only valid on `<pre>`. */
+		language?: T extends HTMLPreElement ? string : never;
+	}
 
-export type ReactNodeType<T = unknown> = ReactElement<T> | ReactNode;
+	// `T` must match the type parameter of the interface being merged, even though it is unused here.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	interface AnchorHTMLAttributes<T> {
+		/** Wraps the link in `<>` so Discord does not embed it. */
+		isEscaped?: boolean;
+	}
+}

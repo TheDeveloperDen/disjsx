@@ -1,12 +1,14 @@
 // ! I name this file the "horror" file because it's a horror show :3
 // ! I would say "lets split it up like we did with the nodes" but honestly... I'm not sure how to do that.
 
-import { DISJSX } from "./disjsxTypes.js";
+import { ButtonStyle } from "discord-api-types/v10";
+import { DISJSX, isDISJSXElement, resolveElement, type ResolvedElement } from "./disjsxTypes.js";
+import { getChildren } from "./children.js";
 import {
-	ButtonStyle,
 	type MessageProps,
 	type ModalProps,
 	type ActionRowProps,
+	type AnyButtonProps,
 	type ButtonProps,
 	type ChannelSelectProps,
 	type ContainerProps,
@@ -18,17 +20,14 @@ import {
 	type StringSelectProps,
 	type TextInputProps,
 	type UserSelectProps,
-	type ReactNodeType,
-	type EmbedAuthorProps,
-	type EmbedFooterProps,
-	type EmbedFieldsProps,
+	type LabelProps,
+	type FileUploadProps,
+	type TextDisplayProps,
 	type EmbedFieldProps,
-	type EmbedFieldValueProps,
-	type EmbedFieldTitleProps,
 } from "./types.js";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Children, isValidElement, Fragment } from "react";
-import { getDISJSXType, getProcessedElement } from "./utils.js";
+import { getProcessedElement } from "./utils.js";
 import { processChildrenToString } from "./processChildrenToString.js";
 
 /**
@@ -65,29 +64,25 @@ export interface ValidationResult {
  * @param children Array of React nodes that may contain Fragments
  * @returns Flattened array with Fragment children expanded
  */
-const expandFragments = (children: ReactNode[]): ReactNode[] => {
-    const expanded: ReactNode[] = [];
+const expandFragments = (children: unknown[]): unknown[] => {
+	const expanded: unknown[] = [];
 
-    for (const child of children) {
-        if (isValidElement(child)) {
-            const element = getProcessedElement(child as ReactElement);
+	for (const child of children) {
+		if (isValidElement(child)) {
+			const element = getProcessedElement(child);
 
-            if (element.type === Fragment) {
-                const fragmentChildren = Children.toArray(
-                    (element.props as { children: ReactNode }).children,
-                );
+			if (element.type === Fragment) {
+				expanded.push(...expandFragments(getChildren(element)));
+				continue;
+			}
 
-                expanded.push(...expandFragments(fragmentChildren));
-                continue;
-            }
+			expanded.push(element);
+		} else {
+			expanded.push(child);
+		}
+	}
 
-            expanded.push(element);
-        } else {
-            expanded.push(child);
-        }
-    }
-
-    return expanded;
+	return expanded;
 };
 
 /**
@@ -218,23 +213,22 @@ export class ComponentValidator {
 		context: "message" | "modal" = "message",
 	): ValidationResult {
 		const processedElement = getProcessedElement(element);
-		const disjsxType = getDISJSXType(processedElement);
 
 		if (context === "modal") {
-			if (disjsxType !== DISJSX.Modal) {
+			if (!isDISJSXElement(processedElement, DISJSX.Modal)) {
 				this.addError("Root element must be a Modal component for modal context");
 
 				return this.getResult();
 			}
 
-			this.validateModal(processedElement as ReactElement<ModalProps>);
+			this.validateModal(processedElement);
 		} else {
-			if (disjsxType !== DISJSX.Message) {
+			if (!isDISJSXElement(processedElement, DISJSX.Message)) {
 				this.addError("Root element must be a Message component");
 				return this.getResult();
 			}
 
-			this.validateMessage(processedElement as ReactElement<MessageProps>, isV2, context);
+			this.validateMessage(processedElement, isV2, context);
 		}
 
 		return this.getResult();
@@ -282,10 +276,9 @@ export class ComponentValidator {
 		for (const child of children) {
 			if (isValidElement(child)) {
 				const processedChild = getProcessedElement(child);
-				const childType = getDISJSXType(processedChild);
 
-				if (childType === DISJSX.Embed) {
-					embeds.push(processedChild as ReactElement<EmbedProps>);
+				if (isDISJSXElement(processedChild, DISJSX.Embed)) {
+					embeds.push(processedChild);
 				}
 			}
 		}
@@ -315,28 +308,44 @@ export class ComponentValidator {
 	 * Validates components within a modal (Label, TextDisplay, ActionRow, or FileUpload).
 	 * @param children The modal's child components
 	 */
-	private validateModalComponents(children: ReactNodeType<ModalProps>[]) {
-		const expandedChildren = expandFragments(children as ReactNode[]);
-		
+	private validateModalComponents(children: unknown[]) {
+		const expandedChildren = expandFragments(children);
+
 		for (const child of expandedChildren) {
 			if (!isValidElement(child)) {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child);
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
 
-			if (childType === DISJSX.ActionRow) {
-				// Legacy ActionRow support (deprecated for new modals)
-				this.validateActionRowForModal(processedChild as ReactElement<ActionRowProps>);
-			} else if (childType === DISJSX.Label) {
-				this.validateLabel(processedChild as ReactElement);
-			} else if (childType === DISJSX.TextDisplay) {
-				this.validateTextDisplay(processedChild as ReactElement);
-			} else if (childType === DISJSX.FileUpload) {
-				this.validateFileUpload(processedChild as ReactElement);
-			} else {
-				this.addError("Modals can only contain Label, TextDisplay, FileUpload, or ActionRow (deprecated) components", childType);
+			switch (resolved?.kind) {
+				case DISJSX.ActionRow: {
+					// Legacy ActionRow support (deprecated for new modals)
+					this.validateActionRowForModal(resolved.element);
+					break;
+				}
+
+				case DISJSX.Label: {
+					this.validateLabel(resolved.element);
+					break;
+				}
+
+				case DISJSX.TextDisplay: {
+					this.validateTextDisplay(resolved.element);
+					break;
+				}
+
+				case DISJSX.FileUpload: {
+					this.validateFileUpload(resolved.element);
+					break;
+				}
+
+				default: {
+					this.addError(
+						"Modals can only contain Label, TextDisplay, FileUpload, or ActionRow (deprecated) components",
+						resolved?.kind,
+					);
+				}
 			}
 		}
 	}
@@ -358,13 +367,12 @@ export class ComponentValidator {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child) as ReactElement<TextInputProps>;
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
 
-			if (childType !== DISJSX.TextInput) {
-				this.addError("Action Rows in modals can only contain Text Input components", childType);
+			if (resolved?.kind !== DISJSX.TextInput) {
+				this.addError("Action Rows in modals can only contain Text Input components", resolved?.kind);
 			} else {
-				this.validateTextInput(processedChild);
+				this.validateTextInput(resolved.element);
 			}
 		}
 
@@ -375,25 +383,25 @@ export class ComponentValidator {
 	 * Validates components for V2 message format.
 	 * @param children The message's child components
 	 */
-	private validateV2MessageComponents(children: ReactNodeType<MessageProps>[]) {
+	private validateV2MessageComponents(children: unknown[]) {
 		let contentLength = 0;
-		const expandedChildren = expandFragments(children as ReactNode[]);
+		const expandedChildren = expandFragments(children);
 
 		for (const child of expandedChildren) {
 			if (!isValidElement(child)) {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child) as ReactElement<MessageProps>;
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
+			const childType = resolved?.kind;
 
-			if (childType === DISJSX.TextDisplay) {
-				const content = typeof processedChild.props.children === "string" ? processedChild.props.children : "";
+			if (resolved?.kind === DISJSX.TextDisplay) {
+				const content = typeof resolved.element.props.children === "string" ? resolved.element.props.children : "";
 
 				contentLength += content.length;
 			}
 
-			if (!childType || !COMPONENT_PLACEMENT_RULES.V2_MESSAGE_ALLOWED.has(childType)) {
+			if (!resolved || !COMPONENT_PLACEMENT_RULES.V2_MESSAGE_ALLOWED.has(resolved.kind)) {
 				this.addError(`Component type ${childType} is not allowed in V2 messages`, childType);
 				continue;
 			}
@@ -405,7 +413,7 @@ export class ComponentValidator {
 				break;
 			}
 
-			this.validateComponent(processedChild, childType);
+			this.validateComponent(resolved);
 		}
 
 		if (contentLength > VALIDATION_LIMITS.MESSAGE_CONTENT_MAX_LENGTH) {
@@ -417,31 +425,31 @@ export class ComponentValidator {
 	 * Validates components for legacy message format.
 	 * @param children The message's child components
 	 */
-	private validateLegacyMessageComponents(children: ReactNodeType<MessageProps>[]) {
+	private validateLegacyMessageComponents(children: unknown[]) {
 		let actionRowCount = 0;
 		let contentLength = 0;
-		const expandedChildren = expandFragments(children as ReactNode[]);
+		const expandedChildren = expandFragments(children);
 
 		for (const child of expandedChildren) {
 			if (!isValidElement(child)) {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child) as ReactElement<MessageProps>;
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
+			const childType = resolved?.kind;
 
-			if (childType === DISJSX.Content) {
-				const content = typeof processedChild.props.children === "string" ? processedChild.props.children : "";
+			if (resolved?.kind === DISJSX.Content) {
+				const content = typeof resolved.element.props.children === "string" ? resolved.element.props.children : "";
 
 				contentLength += content.length;
 			}
 
-			if (!childType || !COMPONENT_PLACEMENT_RULES.LEGACY_MESSAGE_ALLOWED.has(childType)) {
+			if (!resolved || !COMPONENT_PLACEMENT_RULES.LEGACY_MESSAGE_ALLOWED.has(resolved.kind)) {
 				this.addError(`Component type ${childType} is not allowed in Legacy messages`, childType);
 				continue;
 			}
 
-			if (childType === DISJSX.ActionRow) {
+			if (resolved.kind === DISJSX.ActionRow) {
 				actionRowCount++;
 				if (actionRowCount > VALIDATION_LIMITS.MESSAGE_LEGACY_MAX_ACTION_ROWS) {
 					this.addError(
@@ -451,7 +459,7 @@ export class ComponentValidator {
 				}
 			}
 
-			this.validateComponent(processedChild, childType);
+			this.validateComponent(resolved);
 		}
 
 		if (contentLength > VALIDATION_LIMITS.MESSAGE_CONTENT_MAX_LENGTH) {
@@ -464,20 +472,20 @@ export class ComponentValidator {
 	 * @param element The component to validate
 	 * @param disjsxType The DISJSX component type
 	 */
-	private validateComponent(element: ReactElement, disjsxType: DISJSX) {
-		switch (disjsxType) {
+	private validateComponent(resolved: ResolvedElement) {
+		switch (resolved.kind) {
 			case DISJSX.ActionRow: {
-				this.validateActionRow(element as ReactElement<ActionRowProps>);
+				this.validateActionRow(resolved.element);
 				break;
 			}
 
 			case DISJSX.Button: {
-				this.validateButton(element as ReactElement<ButtonProps>);
+				this.validateButton(resolved.element);
 				break;
 			}
 
 			case DISJSX.StringSelect: {
-				this.validateStringSelect(element as ReactElement<StringSelectProps>);
+				this.validateStringSelect(resolved.element);
 				break;
 			}
 
@@ -485,35 +493,32 @@ export class ComponentValidator {
 			case DISJSX.RoleSelect:
 			case DISJSX.MentionableSelect:
 			case DISJSX.ChannelSelect: {
-				this.validateAutoPopulatedSelect(
-					element as ReactElement<UserSelectProps | RoleSelectProps | MentionableSelectProps | ChannelSelectProps>,
-					disjsxType,
-				);
+				this.validateAutoPopulatedSelect(resolved.element, resolved.kind);
 				break;
 			}
 
 			case DISJSX.Section: {
-				this.validateSection(element as ReactElement<SectionProps>);
+				this.validateSection(resolved.element);
 				break;
 			}
 
 			case DISJSX.Container: {
-				this.validateContainer(element as ReactElement<ContainerProps>);
+				this.validateContainer(resolved.element);
 				break;
 			}
 
 			case DISJSX.MediaGallery: {
-				this.validateMediaGallery(element as ReactElement<MediaGalleryProps>);
+				this.validateMediaGallery(resolved.element);
 				break;
 			}
 
 			case DISJSX.Embed: {
-				this.validateEmbed(element as ReactElement<EmbedProps>);
+				this.validateEmbed(resolved.element);
 				break;
 			}
 
 			case DISJSX.TextInput: {
-				this.validateTextInput(element as ReactElement<TextInputProps>);
+				this.validateTextInput(resolved.element);
 				break;
 			}
 		}
@@ -543,17 +548,17 @@ export class ComponentValidator {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child);
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
+			const childType = resolved?.kind;
 
-			if (!childType || !COMPONENT_PLACEMENT_RULES.ACTION_ROW_ALLOWED.has(childType)) {
+			if (!resolved || !COMPONENT_PLACEMENT_RULES.ACTION_ROW_ALLOWED.has(resolved.kind)) {
 				this.addError(`Component type ${childType} is not allowed in Action Rows`, childType);
 				continue;
 			}
 
-			childTypes.push(childType);
+			childTypes.push(resolved.kind);
 
-			if (childType === DISJSX.Button) {
+			if (resolved.kind === DISJSX.Button) {
 				buttonCount++;
 			} else if (
 				[
@@ -562,12 +567,12 @@ export class ComponentValidator {
 					DISJSX.RoleSelect,
 					DISJSX.MentionableSelect,
 					DISJSX.ChannelSelect,
-				].includes(childType)
+				].includes(resolved.kind)
 			) {
 				selectCount++;
 			}
 
-			this.validateComponent(processedChild, childType);
+			this.validateComponent(resolved);
 		}
 
 		if (buttonCount > VALIDATION_LIMITS.ACTION_ROW_MAX_BUTTONS) {
@@ -591,7 +596,7 @@ export class ComponentValidator {
 	 */
 	private validateButton(element: ReactElement<ButtonProps>) {
 		this.path.push("Button");
-		const props = element.props;
+		const props: AnyButtonProps = element.props;
 
 		switch (props.style) {
 			case ButtonStyle.Link: {
@@ -753,27 +758,26 @@ export class ComponentValidator {
 		const children = Children.toArray(element.props.children);
 		const expandedChildren = expandFragments(children);
 
-		const textComponents: ReactElement[] = [];
-		let accessoryComponent: ReactElement | null = null;
+		const textComponents: ResolvedElement[] = [];
+		let accessoryComponent: ResolvedElement | null = null;
 
 		for (const child of expandedChildren) {
 			if (!isValidElement(child)) {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child);
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
 
-			if (childType && COMPONENT_PLACEMENT_RULES.SECTION_TEXT_ALLOWED.has(childType)) {
-				textComponents.push(processedChild);
-			} else if (childType && COMPONENT_PLACEMENT_RULES.SECTION_ACCESSORY_ALLOWED.has(childType)) {
+			if (resolved && COMPONENT_PLACEMENT_RULES.SECTION_TEXT_ALLOWED.has(resolved.kind)) {
+				textComponents.push(resolved);
+			} else if (resolved && COMPONENT_PLACEMENT_RULES.SECTION_ACCESSORY_ALLOWED.has(resolved.kind)) {
 				if (accessoryComponent) {
 					this.addError("Section can have only one accessory component");
 				} else {
-					accessoryComponent = processedChild;
+					accessoryComponent = resolved;
 				}
 			} else {
-				this.addError(`Component type ${childType} is not allowed in Sections`, childType);
+				this.addError(`Component type ${resolved?.kind} is not allowed in Sections`, resolved?.kind);
 			}
 		}
 
@@ -784,15 +788,13 @@ export class ComponentValidator {
 		}
 
 		for (const textComponent of textComponents) {
-			this.validateComponent(textComponent, DISJSX.TextDisplay);
+			this.validateComponent(textComponent);
 		}
 
 		if (accessoryComponent) {
-			const accessoryType = getDISJSXType(accessoryComponent);
-
-			if (accessoryType) {
-				this.validateComponent(accessoryComponent, accessoryType);
-			}
+			this.validateComponent(accessoryComponent);
+		} else {
+			this.addError("Section must have an accessory component (Thumbnail or Button)");
 		}
 
 		this.path.pop();
@@ -812,15 +814,14 @@ export class ComponentValidator {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child);
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
 
-			if (!childType || !COMPONENT_PLACEMENT_RULES.CONTAINER_ALLOWED.has(childType)) {
-				this.addError(`Component type ${childType} is not allowed in Containers`, childType);
+			if (!resolved || !COMPONENT_PLACEMENT_RULES.CONTAINER_ALLOWED.has(resolved.kind)) {
+				this.addError(`Component type ${resolved?.kind} is not allowed in Containers`, resolved?.kind);
 				continue;
 			}
 
-			this.validateComponent(processedChild, childType);
+			this.validateComponent(resolved);
 		}
 
 		this.path.pop();
@@ -879,29 +880,26 @@ export class ComponentValidator {
 				continue;
 			}
 
-			const processedChild = getProcessedElement(child) as ReactElement<
-				EmbedAuthorProps | EmbedFooterProps | EmbedFieldsProps
-			>;
-			const childType = getDISJSXType(processedChild);
+			const resolved = resolveElement(getProcessedElement(child));
 
-			if (!childType || !COMPONENT_PLACEMENT_RULES.EMBED_ALLOWED.has(childType)) {
-				this.addError(`Component type ${childType} is not allowed in Embeds`, childType);
+			if (!resolved || !COMPONENT_PLACEMENT_RULES.EMBED_ALLOWED.has(resolved.kind)) {
+				this.addError(`Component type ${resolved?.kind} is not allowed in Embeds`, resolved?.kind);
 				continue;
 			}
 
-			if (COMPONENT_PLACEMENT_RULES.EMBED_SINGULAR_COMPONENTS.has(childType)) {
-				const currentCount = singularComponentCounts.get(childType) || 0;
+			if (COMPONENT_PLACEMENT_RULES.EMBED_SINGULAR_COMPONENTS.has(resolved.kind)) {
+				const currentCount = singularComponentCounts.get(resolved.kind) || 0;
 
-				singularComponentCounts.set(childType, currentCount + 1);
+				singularComponentCounts.set(resolved.kind, currentCount + 1);
 
 				if (currentCount >= 1) {
-					this.addError(`Embed can only contain one ${childType} component`, childType);
+					this.addError(`Embed can only contain one ${resolved.kind} component`, resolved.kind);
 				}
 			}
 
-			switch (childType) {
+			switch (resolved.kind) {
 				case DISJSX.EmbedAuthor: {
-					const authorProps = processedChild.props as EmbedAuthorProps;
+					const authorProps = resolved.element.props;
 
 					if (authorProps.name && authorProps.name.length > VALIDATION_LIMITS.EMBED_AUTHOR_NAME_MAX_LENGTH) {
 						this.addError(
@@ -911,7 +909,7 @@ export class ComponentValidator {
 					break;
 				}
 				case DISJSX.EmbedFooter: {
-					const footerProps = processedChild.props as EmbedFooterProps;
+					const footerProps = resolved.element.props;
 					const footerText = footerProps.text || (typeof footerProps.children === "string" ? footerProps.children : "");
 
 					if (footerText && footerText.length > VALIDATION_LIMITS.EMBED_FOOTER_TEXT_MAX_LENGTH) {
@@ -922,13 +920,13 @@ export class ComponentValidator {
 					break;
 				}
 				case DISJSX.EmbedFields: {
-					const fieldsChildren = Children.toArray((processedChild.props as EmbedFieldsProps).children);
+					const fieldsChildren = Children.toArray(resolved.element.props.children);
 
 					for (const fieldChild of fieldsChildren) {
 						if (isValidElement(fieldChild)) {
-							const processedFieldChild = getProcessedElement(fieldChild) as ReactElement<EmbedFieldProps>;
+							const processedFieldChild = getProcessedElement(fieldChild);
 
-							if (getDISJSXType(processedFieldChild) === DISJSX.EmbedField) {
+							if (isDISJSXElement(processedFieldChild, DISJSX.EmbedField)) {
 								fieldCount++;
 								this.validateEmbedField(processedFieldChild);
 							}
@@ -958,13 +956,12 @@ export class ComponentValidator {
 
 		for (const child of children) {
 			if (isValidElement(child)) {
-				const processedChild = getProcessedElement(child) as ReactElement<EmbedFieldTitleProps | EmbedFieldValueProps>;
-				const childType = getDISJSXType(processedChild);
+				const resolved = resolveElement(getProcessedElement(child));
 
-				if (childType === DISJSX.EmbedFieldTitle && !fieldName) {
-					fieldName = typeof processedChild.props.children === "string" ? processedChild.props.children : "";
-				} else if (childType === DISJSX.EmbedFieldValue && !fieldValue) {
-					fieldValue = typeof processedChild.props.children === "string" ? processedChild.props.children : "";
+				if (resolved?.kind === DISJSX.EmbedFieldTitle && !fieldName) {
+					fieldName = typeof resolved.element.props.children === "string" ? resolved.element.props.children : "";
+				} else if (resolved?.kind === DISJSX.EmbedFieldValue && !fieldValue) {
+					fieldValue = typeof resolved.element.props.children === "string" ? resolved.element.props.children : "";
 				}
 			}
 		}
@@ -1013,9 +1010,9 @@ export class ComponentValidator {
 	 * Validates Label components for modals.
 	 * @param element The Label component to validate
 	 */
-	private validateLabel(element: ReactElement) {
+	private validateLabel(element: ReactElement<LabelProps>) {
 		this.path.push("Label");
-		const props = element.props as { label?: string; description?: string; children?: ReactNode; id?: number };
+		const props = element.props;
 
 		if (!props.label) {
 			this.addError("Label must have a label property");
@@ -1038,27 +1035,35 @@ export class ComponentValidator {
 					continue;
 				}
 
-				const processedChild = getProcessedElement(child);
-				const childType = getDISJSXType(processedChild);
+				const resolved = resolveElement(getProcessedElement(child));
 
-				if (childType === DISJSX.TextInput) {
-					this.validateTextInput(processedChild as ReactElement<TextInputProps>);
-				} else if (childType === DISJSX.StringSelect) {
-					this.validateStringSelect(processedChild as ReactElement<StringSelectProps>);
-				} else if (
-					childType === DISJSX.UserSelect ||
-					childType === DISJSX.RoleSelect ||
-					childType === DISJSX.MentionableSelect ||
-					childType === DISJSX.ChannelSelect
-				) {
-					this.validateAutoPopulatedSelect(
-						processedChild as ReactElement<UserSelectProps | RoleSelectProps | MentionableSelectProps | ChannelSelectProps>,
-						childType,
-					);
-				} else if (childType === DISJSX.FileUpload) {
-					this.validateFileUpload(processedChild as ReactElement);
-				} else {
-					this.addError("Label can only contain TextInput, Select, or FileUpload components", childType);
+				switch (resolved?.kind) {
+					case DISJSX.TextInput: {
+						this.validateTextInput(resolved.element);
+						break;
+					}
+
+					case DISJSX.StringSelect: {
+						this.validateStringSelect(resolved.element);
+						break;
+					}
+
+					case DISJSX.UserSelect:
+					case DISJSX.RoleSelect:
+					case DISJSX.MentionableSelect:
+					case DISJSX.ChannelSelect: {
+						this.validateAutoPopulatedSelect(resolved.element, resolved.kind);
+						break;
+					}
+
+					case DISJSX.FileUpload: {
+						this.validateFileUpload(resolved.element);
+						break;
+					}
+
+					default: {
+						this.addError("Label can only contain TextInput, Select, or FileUpload components", resolved?.kind);
+					}
 				}
 			}
 		}
@@ -1070,9 +1075,9 @@ export class ComponentValidator {
 	 * Validates FileUpload components for modals.
 	 * @param element The FileUpload component to validate
 	 */
-	private validateFileUpload(element: ReactElement) {
+	private validateFileUpload(element: ReactElement<FileUploadProps>) {
 		this.path.push("FileUpload");
-		const props = element.props as { customId?: string; minValues?: number; maxValues?: number; required?: boolean; id?: number };
+		const props = element.props;
 
 		if (!props.customId) {
 			this.addError("FileUpload must have a customId property");
@@ -1099,9 +1104,9 @@ export class ComponentValidator {
 	 * Validates TextDisplay components.
 	 * @param element The TextDisplay component to validate
 	 */
-	private validateTextDisplay(element: ReactElement) {
+	private validateTextDisplay(element: ReactElement<TextDisplayProps>) {
 		this.path.push("TextDisplay");
-		const props = element.props as { children?: ReactNode; id?: number };
+		const props = element.props;
 
 		if (props.children) {
 			const content = processChildrenToString(props.children);
@@ -1139,12 +1144,11 @@ export class ComponentValidator {
 					continue;
 				}
 
-				const processedChild = getProcessedElement(child);
-				const childType = getDISJSXType(processedChild);
+				const resolved = resolveElement(getProcessedElement(child));
 
-				switch (childType) {
+				switch (resolved?.kind) {
 					case DISJSX.EmbedAuthor: {
-						const authorProps = processedChild.props as EmbedAuthorProps;
+						const authorProps = resolved.element.props;
 
 						if (authorProps.name) {
 							totalCharacters += authorProps.name.length;
@@ -1152,7 +1156,7 @@ export class ComponentValidator {
 						break;
 					}
 					case DISJSX.EmbedFooter: {
-						const footerProps = processedChild.props as EmbedFooterProps;
+						const footerProps = resolved.element.props;
 						const footerText =
 							footerProps.text || (typeof footerProps.children === "string" ? footerProps.children : "");
 
@@ -1162,13 +1166,13 @@ export class ComponentValidator {
 						break;
 					}
 					case DISJSX.EmbedFields: {
-						const fieldsChildren = Children.toArray((processedChild.props as EmbedFieldsProps).children);
+						const fieldsChildren = Children.toArray(resolved.element.props.children);
 
 						for (const fieldChild of fieldsChildren) {
 							if (isValidElement(fieldChild)) {
-								const processedFieldChild = getProcessedElement(fieldChild) as ReactElement<EmbedFieldProps>;
+								const processedFieldChild = getProcessedElement(fieldChild);
 
-								if (getDISJSXType(processedFieldChild) === DISJSX.EmbedField) {
+								if (isDISJSXElement(processedFieldChild, DISJSX.EmbedField)) {
 									const fieldProps = processedFieldChild.props;
 
 									let fieldName = fieldProps.title || "";
@@ -1178,17 +1182,18 @@ export class ComponentValidator {
 
 									for (const subChild of fieldChildren) {
 										if (isValidElement(subChild)) {
-											const processedSubChild = getProcessedElement(subChild) as ReactElement<
-												EmbedFieldTitleProps | EmbedFieldValueProps
-											>;
-											const subChildType = getDISJSXType(processedSubChild);
+											const resolvedSub = resolveElement(getProcessedElement(subChild));
 
-											if (subChildType === DISJSX.EmbedFieldTitle && !fieldName) {
+											if (resolvedSub?.kind === DISJSX.EmbedFieldTitle && !fieldName) {
 												fieldName =
-													typeof processedSubChild.props.children === "string" ? processedSubChild.props.children : "";
-											} else if (subChildType === DISJSX.EmbedFieldValue && !fieldValue) {
+													typeof resolvedSub.element.props.children === "string"
+														? resolvedSub.element.props.children
+														: "";
+											} else if (resolvedSub?.kind === DISJSX.EmbedFieldValue && !fieldValue) {
 												fieldValue =
-													typeof processedSubChild.props.children === "string" ? processedSubChild.props.children : "";
+													typeof resolvedSub.element.props.children === "string"
+														? resolvedSub.element.props.children
+														: "";
 											}
 										}
 									}
@@ -1279,38 +1284,36 @@ export const validateComponent = (
  * @returns Array of validation errors for any duplicate customIds found
  */
 export const validateUniqueCustomIds = (element: ReactElement): ValidationError[] => {
-	const customIds = new Set<string>();
+	const customIds = new Set<string | undefined>();
 	const errors: ValidationError[] = [];
 
-	const checkElement = (node: ReactNode, path: string[] = []) => {
+	const checkElement = (node: unknown, path: string[] = []) => {
 		if (!isValidElement(node)) {
 			return;
 		}
 
-		const processedNode = getProcessedElement(node) as ReactElement<MessageProps | ModalProps>;
-		const disjsxType = getDISJSXType(processedNode);
-		const props = processedNode.props;
+		const processedNode = getProcessedElement(node);
+		const resolved = resolveElement(processedNode);
+		const disjsxType = resolved?.kind;
 
-		if ("customId" in props) {
-			if (customIds.has(props.customId)) {
+		if (resolved && "customId" in resolved.element.props) {
+			const { customId } = resolved.element.props;
+
+			if (customIds.has(customId)) {
 				errors.push({
 					type: "error",
-					message: `Duplicate customId "${props.customId}" found. Custom IDs must be unique within a message.`,
+					message: `Duplicate customId "${customId}" found. Custom IDs must be unique within a message.`,
 					component: disjsxType,
 					path: [...path],
 				});
 			} else {
-				customIds.add(props.customId);
+				customIds.add(customId);
 			}
 		}
 
-		if (props.children) {
-			const children = Children.toArray(props.children);
-
-			children.forEach((child, index) => {
-				checkElement(child, [...path, disjsxType || "Unknown", index.toString()]);
-			});
-		}
+		getChildren(processedNode).forEach((child, index) => {
+			checkElement(child, [...path, disjsxType || "Unknown", index.toString()]);
+		});
 	};
 
 	checkElement(element);

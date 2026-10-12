@@ -1,7 +1,9 @@
-import { type SeparatorProps, type SeparatorPayload, ComponentType } from "../types.js";
+import { type SeparatorProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APISeparatorComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const SeparatorNode: NodeProcessor<SeparatorPayload, SeparatorProps> = {
+export const SeparatorNode: NodeProcessor<APISeparatorComponent, SeparatorProps> = {
 	process: (element) => {
 		const sepProps = element.props;
 

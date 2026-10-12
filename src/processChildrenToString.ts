@@ -1,9 +1,6 @@
-import type { JSXElementConstructor } from "react";
-
+import { getProp, toNodeArray } from "./children.js";
 import { getProcessedElement } from "./utils.js";
-import type { ReactElement } from "react";
-import type { ReactNode } from "react";
-import { Children, isValidElement } from "react";
+import { isValidElement } from "react";
 
 /**
  * A set of HTML-like block-level element types.
@@ -37,7 +34,7 @@ export const blockElementTypes: Set<string> = new Set([
  * @param listIndentPrefix A string prefix used for indenting list items, accumulates with nesting.
  * @returns A string representation of the processed React nodes.
  */
-export const processChildrenToString = (childrenNodes: ReactNode, listIndentPrefix: string = ""): string => {
+export const processChildrenToString = (childrenNodes: unknown, listIndentPrefix: string = ""): string => {
 	if (!childrenNodes) {
 		return "";
 	}
@@ -58,7 +55,6 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 			continue;
 		}
 
-
 		if (typeof rawCurrentNode === "string" || typeof rawCurrentNode === "number") {
 			resultString += String(rawCurrentNode);
 			previousNodeWasBlock = false;
@@ -71,23 +67,9 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 			continue;
 		}
 
-		const element = getProcessedElement(rawCurrentNode) as ReactElement<
-			{
-				children: ReactNode;
-				href?: string;
-				isEscaped?: boolean;
-				language?: string;
-			},
-			| string
-			| JSXElementConstructor<{
-					children: ReactNode;
-					href?: string;
-					isEscaped?: boolean;
-					language?: string;
-			  }>
-		>;
-
-		const { type, props } = element;
+		const element = getProcessedElement(rawCurrentNode);
+		const { type } = element;
+		const children = getProp(element, "children");
 		const currentElementTypeStr = typeof type === "string" ? type : "";
 		const isCurrentNodeHtmlBlock = blockElementTypes.has(currentElementTypeStr);
 
@@ -100,66 +82,63 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 		if (typeof type === "string") {
 			switch (type) {
 				case "h1": {
-					elementContent = `# ${processChildrenToString(props.children, "")}\n`;
+					elementContent = `# ${processChildrenToString(children, "")}\n`;
 					break;
 				}
 				case "h2": {
-					elementContent = `## ${processChildrenToString(props.children, "")}\n`;
+					elementContent = `## ${processChildrenToString(children, "")}\n`;
 					break;
 				}
 				case "h3": {
-					elementContent = `### ${processChildrenToString(props.children, "")}\n`;
+					elementContent = `### ${processChildrenToString(children, "")}\n`;
 					break;
 				}
 				case "strong":
 				case "b": {
-					elementContent = `**${processChildrenToString(props.children, listIndentPrefix)}**`;
+					elementContent = `**${processChildrenToString(children, listIndentPrefix)}**`;
 					break;
 				}
 				case "i":
 				case "em": {
-					elementContent = `*${processChildrenToString(props.children, listIndentPrefix)}*`;
+					elementContent = `*${processChildrenToString(children, listIndentPrefix)}*`;
 					break;
 				}
 				case "u": {
-					elementContent = `__${processChildrenToString(props.children, listIndentPrefix)}__`;
+					elementContent = `__${processChildrenToString(children, listIndentPrefix)}__`;
 					break;
 				}
 				case "s":
 				case "strike": {
-					elementContent = `~~${processChildrenToString(props.children, listIndentPrefix)}~~`;
+					elementContent = `~~${processChildrenToString(children, listIndentPrefix)}~~`;
 					break;
 				}
 				case "small": {
-					elementContent = `-# ${processChildrenToString(props.children, "")}\n`;
+					elementContent = `-# ${processChildrenToString(children, "")}\n`;
 					break;
 				}
 				case "blockquote": {
-					const bqContent = processChildrenToString(props.children, "");
+					const bqContent = processChildrenToString(children, "");
 					const lines = bqContent.split("\n").filter((line) => line.trim().length > 0);
 
 					elementContent = lines.map((line) => `> ${line}`).join("\n") + (lines.length > 0 ? "\n" : "");
 					break;
 				}
 				case "a": {
-					const href = props.href || "";
-					const linkTextContent = processChildrenToString(props.children, listIndentPrefix);
+					const href = String(getProp(element, "href") || "");
+					const linkTextContent = processChildrenToString(children, listIndentPrefix);
 					const linkText = linkTextContent.trim() || href;
 
-					elementContent = props.isEscaped ? `[${linkText}](<${href}>)` : `[${linkText}](${href})`;
+					elementContent = getProp(element, "isEscaped") ? `[${linkText}](<${href}>)` : `[${linkText}](${href})`;
 					break;
 				}
 				case "ul": {
-					const items = Children.toArray(props.children);
+					const items = toNodeArray(children);
 
 					for (const itemNode of items) {
 						if (!isValidElement(itemNode) || itemNode.type !== "li") {
 							continue;
 						}
-						const liContent = processChildrenToString(
-							(itemNode.props as { children: ReactNode }).children,
-							listIndentPrefix + "  ",
-						);
+						const liContent = processChildrenToString(getProp(itemNode, "children"), listIndentPrefix + "  ");
 						const liLines = liContent.trim().split("\n");
 
 						elementContent += `${listIndentPrefix}- ${liLines[0] || ""}\n`;
@@ -174,16 +153,13 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 				}
 				case "ol": {
 					let itemNumber = 1;
-					const items = Children.toArray(props.children);
+					const items = toNodeArray(children);
 
 					for (const itemNode of items) {
 						if (!isValidElement(itemNode) || itemNode.type !== "li") {
 							continue;
 						}
-						const liContent = processChildrenToString(
-							(itemNode.props as { children: ReactNode }).children,
-							listIndentPrefix + "  ",
-						);
+						const liContent = processChildrenToString(getProp(itemNode, "children"), listIndentPrefix + "  ");
 						const liLines = liContent.trim().split("\n");
 
 						elementContent += `${listIndentPrefix}${itemNumber}. ${liLines[0] || ""}\n`;
@@ -198,17 +174,16 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 					break;
 				}
 				case "li": {
-					elementContent = processChildrenToString(props.children, listIndentPrefix);
+					elementContent = processChildrenToString(children, listIndentPrefix);
 					break;
 				}
 				case "code": {
-					elementContent = `\`${processChildrenToString(props.children, listIndentPrefix)}\``;
+					elementContent = `\`${processChildrenToString(children, listIndentPrefix)}\``;
 					break;
 				}
 				case "pre": {
-					const lang = props.language || "";
-					const code =
-						typeof props.children === "string" ? props.children : processChildrenToString(props.children, "");
+					const lang = String(getProp(element, "language") || "");
+					const code = typeof children === "string" ? children : processChildrenToString(children, "");
 
 					elementContent = "```" + lang + "\n" + code.trim() + "\n```\n";
 					break;
@@ -218,15 +193,15 @@ export const processChildrenToString = (childrenNodes: ReactNode, listIndentPref
 					break;
 				}
 				case "p": {
-					elementContent = `${processChildrenToString(props.children, "")}\n`;
+					elementContent = `${processChildrenToString(children, "")}\n`;
 					break;
 				}
 				default: {
-					elementContent = processChildrenToString(props.children, listIndentPrefix);
+					elementContent = processChildrenToString(children, listIndentPrefix);
 				}
 			}
 		} else {
-			elementContent = processChildrenToString(props.children, listIndentPrefix);
+			elementContent = processChildrenToString(children, listIndentPrefix);
 		}
 		resultString += elementContent;
 		previousNodeWasBlock =

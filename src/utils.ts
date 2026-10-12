@@ -1,7 +1,15 @@
-import { nodeProcessors } from "./nodes/index.js";
+import { getChildren } from "./children.js";
+import { nodeProcessors, type ProcessorKind } from "./nodes/index.js";
+import type { NodeOutput, NodeProcessor, ProcessedNode } from "./nodes/types.js";
 import { processChildrenToString } from "./processChildrenToString.js";
-import type { DISJSX, TypedDISJSXComponent } from "./disjsxTypes.js";
-import { isValidElement, type ReactNode, type ReactElement, Fragment, Children } from "react";
+import {
+	resolveElement,
+	type DISJSX,
+	type DISJSXPropsMap,
+	type ResolvedAs,
+	type ResolvedElement,
+} from "./disjsxTypes.js";
+import { isValidElement, type JSXElementConstructor, type ReactElement, Fragment } from "react";
 
 /**
  * Transforms a single React DISJSX component node into its corresponding JSON payload object.
@@ -17,42 +25,56 @@ import { isValidElement, type ReactNode, type ReactElement, Fragment, Children }
  * @param node The React node to process. Expected to be a DISJSX component.
  * @returns A JSON payload object representing the component, or null if the node is invalid.
  */
-export const processNode = (node: ReactNode): unknown | null => {
+export const processNode = <T extends NodeOutput = NodeOutput>(node: unknown): ProcessedNode<T> => {
 	if (!isValidElement(node)) {
 		return null;
 	}
 
 	const element = getProcessedElement(node);
-	
+
 	// Handle React Fragments by processing their children and returning them as an array
 	if (element.type === Fragment) {
-		const fragmentChildren = Children.toArray((element.props as { children: ReactNode }).children);
-		const processedChildren = fragmentChildren
-			.map(child => processNode(child))
-			.filter(result => result !== null);
-		
+		const processedChildren = getChildren(element)
+			.map((child) => processNode<T>(child))
+			.filter((result) => result !== null);
+
 		return processedChildren;
 	}
 
-	const componentDISJSXType = getDISJSXType(element);
+	const resolved = resolveElement(element);
 
-	if (!componentDISJSXType) {
+	if (!resolved || !hasProcessor(resolved)) {
 		return null;
 	}
 
-	const processor = nodeProcessors[componentDISJSXType as keyof typeof nodeProcessors];
+	// should be safe based on the validation
+	return processResolved(resolved.kind, resolved.element) as ProcessedNode<T>;
+};
 
-	if (processor) {
-		return processor.process(
-			element as ReactElement<never, never>,
-			processNode,
-			processChildrenToString,
-			getDISJSXType,
-			getProcessedElement,
-		);
+/**
+ * Every processor, typed against {@link DISJSXPropsMap}. The assignment proves at compile time that each
+ * processor takes the props its DISJSX type declares.
+ */
+const processors: { [K in ProcessorKind]: NodeProcessor<NodeOutput, DISJSXPropsMap[K], never> } = nodeProcessors;
+
+const hasProcessor = (resolved: ResolvedElement): resolved is ResolvedAs<ProcessorKind> => resolved.kind in processors;
+
+const processResolved = <K extends ProcessorKind>(
+	kind: K,
+	element: ReactElement<DISJSXPropsMap[K]>,
+): NodeOutput | null =>
+	processors[kind].process(element, processNode, processChildrenToString, getDISJSXType, getProcessedElement);
+
+/**
+ * Renders a function component. React class components cannot be called directly, so they are rejected.
+ */
+const renderComponent = (type: JSXElementConstructor<unknown>, props: unknown): unknown => {
+	if (type.prototype?.isReactComponent) {
+		throw new TypeError("DISJSX: Class components are not supported. Use a function component.");
 	}
 
-	return null;
+	// Not a class, so it is a function component. This cannot be expressed in the type system.
+	return Reflect.apply(type, undefined, [props]);
 };
 
 /**
@@ -62,7 +84,7 @@ export const processNode = (node: ReactNode): unknown | null => {
  * @param loop The number of times the function has been called.
  * @returns The DISJSX type, or undefined if not a DISJSX component.
  */
-export const getDISJSXType = (node: ReactNode, loop: number = 0): DISJSX | undefined => {
+export const getDISJSXType = (node: unknown, loop: number = 0): DISJSX | undefined => {
 	if (loop > 10) {
 		return undefined;
 	}
@@ -78,16 +100,15 @@ export const getDISJSXType = (node: ReactNode, loop: number = 0): DISJSX | undef
 		return undefined;
 	}
 
+	const resolved = resolveElement(node);
+
+	if (resolved) {
+		return resolved.kind;
+	}
+
 	if (typeof type === "function") {
-		if ("disjsxType" in type) {
-			return (type as TypedDISJSXComponent<unknown, never>).disjsxType;
-		}
-
 		// It's a regular functional component, try to render and recurse
-		// @ts-expect-error - TODO: fix this
-		const renderedOutput = type(props);
-
-		return getDISJSXType(renderedOutput, loop + 1);
+		return getDISJSXType(renderComponent(type, props), loop + 1);
 	}
 
 	// If type is a string (e.g., "div", "span"), it's a host component.
@@ -108,8 +129,7 @@ export const getProcessedElement = (element: ReactElement, loop: number = 0): Re
 	}
 
 	if (typeof element.type === "function" && !("disjsxType" in element.type)) {
-		// @ts-expect-error - TODO: fix this
-		const renderedOutput = element.type(element.props);
+		const renderedOutput = renderComponent(element.type, element.props);
 
 		if (isValidElement(renderedOutput)) {
 			return getProcessedElement(renderedOutput, loop + 1);

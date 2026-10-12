@@ -1,7 +1,9 @@
-import { type TextDisplayProps, type TextDisplayPayload, ComponentType } from "../types.js";
+import { type TextDisplayProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APITextDisplayComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const TextDisplayNode: NodeProcessor<TextDisplayPayload, TextDisplayProps> = {
+export const TextDisplayNode: NodeProcessor<APITextDisplayComponent, TextDisplayProps> = {
 	process: (element, _, processChildrenToString) => {
 		const textDisplayProps = element.props;
 

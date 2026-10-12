@@ -1,23 +1,16 @@
 import { Children } from "react";
-import { type ContainerProps, type ContainerPayload, type AnyComponentPayload, ComponentType } from "../types.js";
-import { type NodeProcessor } from "./types.js";
+import { type ContainerProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APIComponentInContainer, APIContainerComponent } from "discord-api-types/v10";
+import { flattenProcessed, type NodeProcessor } from "./types.js";
 
-export const ContainerNode: NodeProcessor<ContainerPayload, ContainerProps> = {
+export const ContainerNode: NodeProcessor<APIContainerComponent, ContainerProps, APIComponentInContainer> = {
 	process: (element, processChildNode) => {
 		const containerProps = element.props;
-		const components: AnyComponentPayload[] = [];
+		const components: APIComponentInContainer[] = [];
 
 		for (const child of Children.toArray(containerProps.children)) {
-			const processedChild = processChildNode(child);
-
-			if (processedChild !== null) {
-				// Handle arrays returned from Fragments
-				if (Array.isArray(processedChild)) {
-					components.push(...(processedChild as AnyComponentPayload[]));
-				} else {
-					components.push(processedChild as AnyComponentPayload);
-				}
-			}
+			components.push(...flattenProcessed(processChildNode(child)));
 		}
 
 		return {

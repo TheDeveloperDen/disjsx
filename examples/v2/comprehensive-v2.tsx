@@ -1,3 +1,4 @@
+import { ButtonStyle } from "discord-api-types/v10";
 import {
 	Message,
 	Section,
@@ -7,7 +8,6 @@ import {
 	Container,
 	Separator,
 	ActionRow,
-	ButtonStyle,
 	Colors,
 	MediaGallery,
 	MediaGalleryItem,
@@ -37,10 +37,7 @@ const ComprehensiveV2Message = () => {
 			<Section>
 				<TextDisplay>### Section with Thumbnail Accessory</TextDisplay>
 				<TextDisplay>This section demonstrates how text content pairs with a visual accessory.</TextDisplay>
-				<Thumbnail
-					url="https://cdn.discordapp.com/embed/avatars/1.png"
-					description="Demo thumbnail image"
-				/>
+				<Thumbnail url="https://cdn.discordapp.com/embed/avatars/1.png" description="Demo thumbnail image" />
 			</Section>
 
 			<Section>
@@ -88,10 +85,7 @@ const ComprehensiveV2Message = () => {
 					url="https://placehold.co/800x600/4ECDC4/FFFFFF.png?text=Image+3"
 					description="Third gallery image"
 				/>
-				<MediaGalleryItem
-					url="attachment://demo-video.mp4"
-					description="Local video attachment"
-				/>
+				<MediaGalleryItem url="attachment://demo-video.mp4" description="Local video attachment" />
 			</MediaGallery>
 
 			<TextDisplay>### File Attachments</TextDisplay>

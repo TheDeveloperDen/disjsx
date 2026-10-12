@@ -1,42 +1,33 @@
 import { Children } from "react";
-import {
-	type SectionProps,
-	type SectionPayload,
-	type TextDisplayPayload,
-	type ThumbnailPayload,
-	type ButtonPayload,
-	type AnyComponentPayload,
-	ComponentType,
-} from "../types.js";
-import { type NodeProcessor } from "./types.js";
+import { type SectionProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APISectionAccessoryComponent, APISectionComponent, APITextDisplayComponent } from "discord-api-types/v10";
+import { flattenProcessed, type NodeProcessor } from "./types.js";
 
-export const SectionNode: NodeProcessor<SectionPayload, SectionProps> = {
+export const SectionNode: NodeProcessor<
+	APISectionComponent,
+	SectionProps,
+	APITextDisplayComponent | APISectionAccessoryComponent
+> = {
 	process: (element, processChildNode) => {
 		const sectionProps = element.props;
 		const sectionChildren = Children.toArray(sectionProps.children);
-		const textDisplays: TextDisplayPayload[] = [];
-		let accessory: ThumbnailPayload | ButtonPayload | undefined = undefined;
+		const textDisplays: APITextDisplayComponent[] = [];
+		let accessory: APISectionAccessoryComponent | undefined = undefined;
 
 		for (const child of sectionChildren) {
-			const processedChild = processChildNode(child);
-
-			if (!processedChild) {
-				continue;
-			}
-
-			// Handle arrays returned from Fragments
-			const childrenToProcess = Array.isArray(processedChild) ? processedChild : [processedChild];
-
-			for (const typedProcessedChild of childrenToProcess as AnyComponentPayload[]) {
-				if (typedProcessedChild.type === ComponentType.TextDisplay) {
-					textDisplays.push(typedProcessedChild as TextDisplayPayload);
-				} else if (
-					typedProcessedChild.type === ComponentType.Thumbnail ||
-					typedProcessedChild.type === ComponentType.Button
-				) {
-					accessory = typedProcessedChild as ThumbnailPayload | ButtonPayload;
+			for (const processedChild of flattenProcessed(processChildNode(child))) {
+				if (processedChild.type === ComponentType.TextDisplay) {
+					textDisplays.push(processedChild);
+				} else if (processedChild.type === ComponentType.Thumbnail || processedChild.type === ComponentType.Button) {
+					accessory = processedChild;
 				}
 			}
+		}
+
+		// A section is invalid without an accessory (validation reports it), so there is nothing to render.
+		if (!accessory) {
+			return null;
 		}
 
 		return {

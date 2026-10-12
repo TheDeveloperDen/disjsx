@@ -1,7 +1,9 @@
-import { type TextInputProps, type TextInputPayload, ComponentType } from "../types.js";
+import { type TextInputProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APITextInputComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const TextInputNode: NodeProcessor<TextInputPayload, TextInputProps> = {
+export const TextInputNode: NodeProcessor<APITextInputComponent, TextInputProps> = {
 	process: (element) => {
 		const textInputProps = element.props;
 

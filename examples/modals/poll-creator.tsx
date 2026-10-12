@@ -1,18 +1,9 @@
-import {
-	renderDiscordModal,
-	Modal,
-	Label,
-	TextInput,
-	TextInputStyle,
-	StringSelect,
-	SelectOption,
-	ChannelSelect,
-	ChannelTypes,
-} from "disjsx";
+import { TextInputStyle, ChannelType } from "discord-api-types/v10";
+import { renderDiscordModal, Modal, Label, TextInput, StringSelect, SelectOption, ChannelSelect } from "disjsx";
 
 /**
  * Example: Poll Creator Modal
- * 
+ *
  * This demonstrates:
  * - Multiple TextInput components with different styles
  * - StringSelect with multiple selection
@@ -57,7 +48,7 @@ const PollCreatorModal = () => {
 			<Label label="Post in Channel" description="Where should this poll be posted?">
 				<ChannelSelect
 					customId="poll_channel"
-					channelTypes={[ChannelTypes.GuildText, ChannelTypes.GuildAnnouncement]}
+					channelTypes={[ChannelType.GuildText, ChannelType.GuildAnnouncement]}
 					required
 				/>
 			</Label>

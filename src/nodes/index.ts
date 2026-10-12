@@ -17,8 +17,7 @@ import { SectionNode } from "./SectionNode.js";
 import { MediaGalleryNode } from "./MediaGalleryNode.js";
 import { LabelNode } from "./LabelNode.js";
 import { FileUploadNode } from "./FileUploadNode.js";
-import { type NodeProcessor } from "./types.js";
-import type { AnyComponentPayload, EmbedPayload } from "../types.js";
+import { type NodeOutput, type NodeProcessor } from "./types.js";
 
 /**
  * Registry of node processors for main DISJSX components
@@ -44,7 +43,10 @@ export const nodeProcessors = {
 	[DISJSX.File]: FileNode,
 	[DISJSX.Label]: LabelNode,
 	[DISJSX.FileUpload]: FileUploadNode,
-} satisfies Partial<Record<DISJSX, NodeProcessor<AnyComponentPayload | EmbedPayload, never>>>;
+} satisfies Partial<Record<DISJSX, NodeProcessor<NodeOutput, never, never>>>;
+
+/** The DISJSX types that have a node processor. */
+export type ProcessorKind = keyof typeof nodeProcessors;
 
 export * from "./types.js";
 export * from "./ActionRowNode.js";

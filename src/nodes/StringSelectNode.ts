@@ -1,18 +1,14 @@
 import { Children, isValidElement } from "react";
-import {
-	type StringSelectProps,
-	type SelectOptionProps,
-	type StringSelectPayload,
-	type SelectOptionPayload,
-	ComponentType,
-} from "../types.js";
-import { DISJSX } from "../disjsxTypes.js";
+import { type StringSelectProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import { DISJSX, isDISJSXElement } from "../disjsxTypes.js";
+import type { APISelectMenuOption, APIStringSelectComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const StringSelectNode: NodeProcessor<StringSelectPayload, StringSelectProps> = {
-	process: (element, _, __, getDISJSXType, getProcessedElement) => {
+export const StringSelectNode: NodeProcessor<APIStringSelectComponent, StringSelectProps> = {
+	process: (element, _, __, ___, getProcessedElement) => {
 		const selProps = element.props;
-		const options: SelectOptionPayload[] = [];
+		const options: APISelectMenuOption[] = [];
 
 		for (const rawChildNode of Children.toArray(selProps.children)) {
 			if (!isValidElement(rawChildNode)) {
@@ -21,10 +17,10 @@ export const StringSelectNode: NodeProcessor<StringSelectPayload, StringSelectPr
 
 			const childNode = getProcessedElement(rawChildNode);
 
-			if (getDISJSXType(childNode) !== DISJSX.SelectOption) {
+			if (!isDISJSXElement(childNode, DISJSX.SelectOption)) {
 				continue;
 			}
-			const optProps = childNode.props as SelectOptionProps;
+			const optProps = childNode.props;
 
 			options.push({
 				label: optProps.label || (typeof optProps.children === "string" ? optProps.children : "Option"),

@@ -1,12 +1,4 @@
-import {
-	Message,
-	Section,
-	TextDisplay,
-	Container,
-	Separator,
-	Colors,
-	renderDiscordMessage,
-} from "disjsx";
+import { Message, TextDisplay, Container, Separator, Colors, renderDiscordMessage } from "disjsx";
 
 /**
  * Example: Formatting and Layout V2 Message
@@ -29,25 +21,27 @@ const FormattingV2Message = () => {
 				<TextDisplay>### Section Header</TextDisplay>
 			</Container>
 
-			<Section>
+			<Container>
 				<TextDisplay>## Text Styling Examples</TextDisplay>
 				<TextDisplay>
-					This text demonstrates **bold formatting** and *italic text* with __underlined__ elements.
-					We can also use <s>strikethrough</s> and <small>small text</small> for various effects.
+					This text demonstrates **bold formatting** and *italic text* with __underlined__ elements. We can also use{" "}
+					<s>strikethrough</s> and <small>small text</small> for various effects.
 				</TextDisplay>
-			</Section>
+			</Container>
 
 			<Separator spacing={2} />
 
 			<TextDisplay>## List Formatting</TextDisplay>
 
-			<Section>
+			<Container>
 				<TextDisplay>### Unordered Lists</TextDisplay>
 				<TextDisplay>
 					<ul>
 						<li>First item in the list</li>
 						<li>Second item with **bold text**</li>
-						<li>Third item containing <code>inline code</code></li>
+						<li>
+							Third item containing <code>inline code</code>
+						</li>
 						<li>
 							Nested list:
 							<ul>
@@ -57,9 +51,9 @@ const FormattingV2Message = () => {
 						</li>
 					</ul>
 				</TextDisplay>
-			</Section>
+			</Container>
 
-			<Section>
+			<Container>
 				<TextDisplay>### Ordered Lists</TextDisplay>
 				<TextDisplay>
 					<ol>
@@ -75,11 +69,13 @@ const FormattingV2Message = () => {
 						</li>
 					</ol>
 				</TextDisplay>
-			</Section>
+			</Container>
 
 			<Container accentColor={Colors.Green}>
 				<TextDisplay>## Code Examples</TextDisplay>
-				<TextDisplay>Here's some inline <code>const message = "Hello World!";</code> code.</TextDisplay>
+				<TextDisplay>
+					Here's some inline <code>const message = "Hello World!";</code> code.
+				</TextDisplay>
 				<TextDisplay>
 					<pre language="javascript">{`function createMessage() {
   const content = "This is a code block";
@@ -106,25 +102,32 @@ const FormattingV2Message = () => {
 
 			<TextDisplay>## Quote and Block Elements</TextDisplay>
 
-			<Section>
+			<Container>
 				<TextDisplay>### Blockquotes</TextDisplay>
 				<TextDisplay>
 					<blockquote>
-						<strong>Important Notice:</strong><br />
-						This is a blockquote that can contain multiple lines of formatted text.
-						It supports *italic*, **bold**, and <code>code</code> formatting within the quote.
+						<strong>Important Notice:</strong>
+						<br />
+						This is a blockquote that can contain multiple lines of formatted text. It supports *italic*, **bold**, and{" "}
+						<code>code</code> formatting within the quote.
 					</blockquote>
 				</TextDisplay>
-			</Section>
+			</Container>
 
 			<Container accentColor={Colors.Yellow}>
 				<TextDisplay>## Mixed Content Layout</TextDisplay>
 				<TextDisplay>
-					<p>This paragraph shows how <strong>bold</strong> and <em>italic</em> text work together.</p>
+					<p>
+						This paragraph shows how <strong>bold</strong> and <em>italic</em> text work together.
+					</p>
 
-					<p>Here's a second paragraph with <a href="https://discord.com">a link</a> and <s>strikethrough</s> text.</p>
+					<p>
+						Here's a second paragraph with <a href="https://discord.com">a link</a> and <s>strikethrough</s> text.
+					</p>
 
-					<p>The third paragraph demonstrates <small>small text</small> and regular content.</p>
+					<p>
+						The third paragraph demonstrates <small>small text</small> and regular content.
+					</p>
 				</TextDisplay>
 			</Container>
 
@@ -136,9 +139,15 @@ const FormattingV2Message = () => {
 				<TextDisplay>This container demonstrates complex nested content.</TextDisplay>
 				<TextDisplay>
 					<ul>
-						<li>Item with <strong>bold text</strong></li>
-						<li>Item with <em>italic text</em></li>
-						<li>Item with <code>code</code></li>
+						<li>
+							Item with <strong>bold text</strong>
+						</li>
+						<li>
+							Item with <em>italic text</em>
+						</li>
+						<li>
+							Item with <code>code</code>
+						</li>
 					</ul>
 				</TextDisplay>
 			</Container>
@@ -146,14 +155,14 @@ const FormattingV2Message = () => {
 			<Separator divider={false} />
 
 			<TextDisplay>## Link and Media Placeholders</TextDisplay>
-			<Section>
+			<Container>
 				<TextDisplay>
-					Here are some example links:<br />
-					- <a href="https://discord.com">Discord Homepage</a><br />
-					- <a href="https://github.com">GitHub</a><br />
-					- <a href="https://example.com">Example Domain</a>
+					Here are some example links:
+					<br />- <a href="https://discord.com">Discord Homepage</a>
+					<br />- <a href="https://github.com">GitHub</a>
+					<br />- <a href="https://example.com">Example Domain</a>
 				</TextDisplay>
-			</Section>
+			</Container>
 
 			<TextDisplay>*This example demonstrates the rich formatting capabilities available in V2 messages!*</TextDisplay>
 		</Message>

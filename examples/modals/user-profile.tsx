@@ -1,14 +1,15 @@
-import { Modal, Label, TextInput, TextInputStyle, renderDiscordModal } from "disjsx";
+import { TextInputStyle } from "discord-api-types/v10";
+import { Modal, Label, TextInput, renderDiscordModal } from "disjsx";
 
 /**
  * Example: User Profile Modal (Updated to use Label components)
- * 
+ *
  * This demonstrates:
  * - Label components replacing the deprecated ActionRow pattern
  * - TextInput components with different styles
  * - Mix of required and optional fields
  * - Clean, modern modal structure
- * 
+ *
  * Note: ActionRow with TextInput is deprecated for modals. Use Label instead!
  */
 const UserProfileModal = () => (
@@ -23,7 +24,7 @@ const UserProfileModal = () => (
 				label="Username"
 			/>
 		</Label>
-		
+
 		<Label label="Bio" description="Tell the community about yourself">
 			<TextInput
 				customId="bio"
@@ -33,14 +34,9 @@ const UserProfileModal = () => (
 				required={false}
 			/>
 		</Label>
-		
+
 		<Label label="Email" description="Your contact email (kept private)">
-			<TextInput
-				customId="email"
-				style={TextInputStyle.Short}
-				placeholder="user@example.com"
-				required={true}
-			/>
+			<TextInput customId="email" style={TextInputStyle.Short} placeholder="user@example.com" required={true} />
 		</Label>
 	</Modal>
 );

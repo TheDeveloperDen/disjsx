@@ -1,7 +1,9 @@
-import { type FileProps, type FilePayload, ComponentType } from "../types.js";
+import { type FileProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APIFileComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const FileNode: NodeProcessor<FilePayload, FileProps> = {
+export const FileNode: NodeProcessor<APIFileComponent, FileProps> = {
 	process: (element) => {
 		const fileProps = element.props;
 

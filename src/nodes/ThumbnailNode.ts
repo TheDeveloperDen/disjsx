@@ -1,7 +1,9 @@
-import { type ThumbnailProps, type ThumbnailPayload, ComponentType } from "../types.js";
+import { type ThumbnailProps } from "../types.js";
+import { ComponentType } from "discord-api-types/v10";
+import type { APIThumbnailComponent } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const ThumbnailNode: NodeProcessor<ThumbnailPayload, ThumbnailProps> = {
+export const ThumbnailNode: NodeProcessor<APIThumbnailComponent, ThumbnailProps> = {
 	process: (element) => {
 		const thumbProps = element.props;
 

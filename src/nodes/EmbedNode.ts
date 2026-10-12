@@ -1,20 +1,13 @@
-import { Children, isValidElement, type ReactNode } from "react";
-import {
-	type EmbedProps,
-	type EmbedAuthorProps,
-	type EmbedFieldProps,
-	type EmbedFooterProps,
-	type EmbedImageProps,
-	type EmbedThumbnailProps,
-	type EmbedPayload,
-} from "../types.js";
-import { DISJSX } from "../disjsxTypes.js";
+import { Children, isValidElement } from "react";
+import { type EmbedProps } from "../types.js";
+import { DISJSX, resolveElement } from "../disjsxTypes.js";
+import type { APIEmbed } from "discord-api-types/v10";
 import { type NodeProcessor } from "./types.js";
 
-export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
-	process: (element, _, processChildrenToString, getDISJSXType, getProcessedElement) => {
+export const EmbedNode: NodeProcessor<APIEmbed, EmbedProps> = {
+	process: (element, _, processChildrenToString, __, getProcessedElement) => {
 		const embedProps = element.props;
-		const payload: EmbedPayload = {
+		const payload: APIEmbed = {
 			title: embedProps.title,
 			description: embedProps.description,
 			url: embedProps.url,
@@ -30,12 +23,15 @@ export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
 				continue;
 			}
 
-			const child = getProcessedElement(rawChild);
-			const childType = getDISJSXType(child);
+			const child = resolveElement(getProcessedElement(rawChild));
 
-			switch (childType) {
+			if (!child) {
+				continue;
+			}
+
+			switch (child.kind) {
 				case DISJSX.EmbedAuthor: {
-					const authorProps = child.props as EmbedAuthorProps;
+					const authorProps = child.element.props;
 
 					payload.author = {
 						name: authorProps.name,
@@ -47,21 +43,21 @@ export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
 
 				case DISJSX.EmbedTitle: {
 					if (!payload.title) {
-						payload.title = processChildrenToString((child.props as { children: ReactNode }).children);
+						payload.title = processChildrenToString(child.element.props.children);
 					}
 
 					break;
 				}
 
 				case DISJSX.EmbedDescription: {
-					const description = processChildrenToString((child.props as { children: ReactNode }).children);
+					const description = processChildrenToString(child.element.props.children);
 
 					tempDescription += (tempDescription ? "\n" : "") + description;
 					break;
 				}
 
 				case DISJSX.EmbedFooter: {
-					const footerProps = child.props as EmbedFooterProps;
+					const footerProps = child.element.props;
 
 					payload.footer = {
 						text: footerProps.text || processChildrenToString(footerProps.children),
@@ -72,33 +68,33 @@ export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
 
 				case DISJSX.EmbedImage: {
 					payload.image = {
-						url: (child.props as EmbedImageProps).url,
+						url: child.element.props.url,
 					};
 					break;
 				}
 
 				case DISJSX.EmbedThumbnail: {
 					payload.thumbnail = {
-						url: (child.props as EmbedThumbnailProps).url,
+						url: child.element.props.url,
 					};
 					break;
 				}
 
 				case DISJSX.EmbedFields: {
-					const fieldChildren = Children.toArray((child.props as { children: ReactNode }).children);
+					const fieldChildren = Children.toArray(child.element.props.children);
 
 					for (const rawFieldChild of fieldChildren) {
 						if (!isValidElement(rawFieldChild)) {
 							continue;
 						}
 
-						const fieldChild = getProcessedElement(rawFieldChild);
+						const fieldChild = resolveElement(getProcessedElement(rawFieldChild));
 
-						if (getDISJSXType(fieldChild) !== DISJSX.EmbedField) {
+						if (fieldChild?.kind !== DISJSX.EmbedField) {
 							continue;
 						}
 
-						const fieldProps = fieldChild.props as EmbedFieldProps;
+						const fieldProps = fieldChild.element.props;
 						let fieldName = fieldProps.title || "";
 						let fieldValue = fieldProps.value || "";
 
@@ -109,13 +105,12 @@ export const EmbedNode: NodeProcessor<EmbedPayload, EmbedProps> = {
 									continue;
 								}
 
-								const subChild = getProcessedElement(rawSubChild);
-								const subChildType = getDISJSXType(subChild);
+								const subChild = resolveElement(getProcessedElement(rawSubChild));
 
-								if (subChildType === DISJSX.EmbedFieldTitle && !fieldName) {
-									fieldName = processChildrenToString((subChild.props as { children: ReactNode }).children);
-								} else if (subChildType === DISJSX.EmbedFieldValue && !fieldValue) {
-									fieldValue = processChildrenToString((subChild.props as { children: ReactNode }).children);
+								if (subChild?.kind === DISJSX.EmbedFieldTitle && !fieldName) {
+									fieldName = processChildrenToString(subChild.element.props.children);
+								} else if (subChild?.kind === DISJSX.EmbedFieldValue && !fieldValue) {
+									fieldValue = processChildrenToString(subChild.element.props.children);
 								}
 							}
 						}

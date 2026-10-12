@@ -1,40 +1,22 @@
-import { type ReactNode, type ReactElement, Children, isValidElement, Fragment } from "react";
-import {
-	type MessageProps,
-	type ModalProps,
-	type ActionRowPayload,
-	type EmbedPayload,
-	type LegacyMessagePayload,
-	MessageFlags,
-	type V2MessagePayload,
-	type ModalPayload,
-	type AnyComponentPayload,
-	InteractionType,
-} from "./types.js";
+import { type ReactElement, Children, isValidElement, Fragment } from "react";
+import { type LegacyMessagePayload, type V2MessagePayload } from "./types.js";
+import { MessageFlags } from "discord-api-types/v10";
+import type {
+	APIActionRowComponent,
+	APIComponentInMessageActionRow,
+	APIEmbed,
+	APIMessageTopLevelComponent,
+	APIModalInteractionResponseCallbackComponent,
+	APIModalInteractionResponseCallbackData,
+} from "discord-api-types/v10";
 
-import { DISJSX, type TypedDISJSXComponent } from "./disjsxTypes.js";
+import { DISJSX, isDISJSXElement } from "./disjsxTypes.js";
+import { getChildren, getProp } from "./children.js";
 import { processNode } from "./utils.js";
+import { flattenProcessed } from "./nodes/types.js";
 import { getDISJSXType, getProcessedElement } from "./utils.js";
 import { processChildrenToString } from "./processChildrenToString.js";
 import { validateComponent, validateUniqueCustomIds } from "./validation.js";
-
-/**
- * Recursively flattens arrays that may contain nested arrays (from nested fragments).
- * This ensures that fragments at any nesting depth are properly flattened.
- */
-const flattenDeep = (arr: unknown[]): AnyComponentPayload[] => {
-	const result: AnyComponentPayload[] = [];
-
-	for (const item of arr) {
-		if (Array.isArray(item)) {
-			result.push(...flattenDeep(item));
-		} else {
-			result.push(item as AnyComponentPayload);
-		}
-	}
-
-	return result;
-};
 
 // Exporting all these in the off chance someone wants to use them directly (idk why you would tho)
 export * from "./disjsxTypes.js";
@@ -71,7 +53,7 @@ export const renderDiscordMessage = (
 
 	const processedMessageElement = getProcessedElement(messageElement);
 
-	if (!processedMessageElement || getDISJSXType(processedMessageElement) !== DISJSX.Message) {
+	if (!processedMessageElement || !isDISJSXElement(processedMessageElement, DISJSX.Message)) {
 		console.error("Received:", messageElement);
 		console.error("Processed:", processedMessageElement);
 		console.error("DISJSX Type:", getDISJSXType(processedMessageElement));
@@ -80,18 +62,11 @@ export const renderDiscordMessage = (
 		return null;
 	}
 
-	const { props } = processedMessageElement as ReactElement<
-		MessageProps,
-		TypedDISJSXComponent<MessageProps, DISJSX.Message>
-	>;
+	const { props } = processedMessageElement;
 	const { isV2 = false, username, avatarUrl, tts, flags } = props;
 
 	if (validate) {
-		const validationResult = validateComponent(
-			processedMessageElement as ReactElement<MessageProps, TypedDISJSXComponent<MessageProps, DISJSX.Message>>,
-			isV2,
-			"message",
-		);
+		const validationResult = validateComponent(processedMessageElement, isV2, "message");
 		const customIdErrors = validateUniqueCustomIds(processedMessageElement);
 
 		const allErrors = [...validationResult.errors, ...customIdErrors];
@@ -123,34 +98,18 @@ export const renderDiscordMessage = (
 	const childrenArray = Children.toArray(props.children);
 
 	if (isV2) {
-		const v2Components: AnyComponentPayload[] = [];
+		const v2Components: APIMessageTopLevelComponent[] = [];
 
 		for (const child of childrenArray) {
 			if (isValidElement(child) && child.type === Fragment) {
 				// Handle React Fragments by processing their children
-				const fragmentChildren = Children.toArray((child.props as { children: ReactNode }).children);
+				const fragmentChildren = getChildren(child);
 
 				for (const fragmentChild of fragmentChildren) {
-					const processedNode = processNode(fragmentChild);
-
-					if (processedNode !== null) {
-						if (Array.isArray(processedNode)) {
-							v2Components.push(...flattenDeep(processedNode));
-						} else {
-							v2Components.push(processedNode as AnyComponentPayload);
-						}
-					}
+					v2Components.push(...flattenProcessed(processNode<APIMessageTopLevelComponent>(fragmentChild)));
 				}
 			} else {
-				const processedNode = processNode(child);
-
-				if (processedNode !== null) {
-					if (Array.isArray(processedNode)) {
-						v2Components.push(...flattenDeep(processedNode));
-					} else {
-						v2Components.push(processedNode as AnyComponentPayload);
-					}
-				}
+				v2Components.push(...flattenProcessed(processNode<APIMessageTopLevelComponent>(child)));
 			}
 		}
 		const v2Payload: V2MessagePayload = {
@@ -186,14 +145,11 @@ export const renderDiscordMessage = (
 
 		// Handle React Fragments by processing their children
 		if (rawChildNode.type === Fragment) {
-			const fragmentChildren = Children.toArray((rawChildNode.props as { children: ReactNode }).children);
+			const fragmentChildren = getChildren(rawChildNode);
 
 			for (const fragmentChild of fragmentChildren) {
 				if (!isValidElement(fragmentChild)) {
-					if (
-						typeof fragmentChild === "string" &&
-						!legacyPayload.content
-					) {
+					if (typeof fragmentChild === "string" && !legacyPayload.content) {
 						legacyPayload.content = (legacyPayload.content || "") + fragmentChild;
 					}
 					continue;
@@ -204,19 +160,13 @@ export const renderDiscordMessage = (
 
 				if (childDISJSXType === DISJSX.Content) {
 					legacyPayload.content =
-						(legacyPayload.content || "") + processChildrenToString((childNode.props as { children: ReactNode }).children);
+						(legacyPayload.content || "") + processChildrenToString(getProp(childNode, "children"));
 				} else if (childDISJSXType === DISJSX.Embed) {
-					const embed = processNode(childNode) as EmbedPayload | null;
-
-					if (embed) {
-						legacyPayload.embeds?.push(embed);
-					}
+					legacyPayload.embeds?.push(...flattenProcessed(processNode<APIEmbed>(childNode)));
 				} else if (childDISJSXType === DISJSX.ActionRow) {
-					const actionRow = processNode(childNode) as ActionRowPayload | null;
-
-					if (actionRow) {
-						legacyPayload.components?.push(actionRow);
-					}
+					legacyPayload.components?.push(
+						...flattenProcessed(processNode<APIActionRowComponent<APIComponentInMessageActionRow>>(childNode)),
+					);
 				}
 			}
 			continue;
@@ -226,20 +176,13 @@ export const renderDiscordMessage = (
 		const childDISJSXType = getDISJSXType(childNode);
 
 		if (childDISJSXType === DISJSX.Content) {
-			legacyPayload.content =
-				(legacyPayload.content || "") + processChildrenToString((childNode.props as { children: ReactNode }).children);
+			legacyPayload.content = (legacyPayload.content || "") + processChildrenToString(getProp(childNode, "children"));
 		} else if (childDISJSXType === DISJSX.Embed) {
-			const embed = processNode(childNode) as EmbedPayload | null;
-
-			if (embed) {
-				legacyPayload.embeds?.push(embed);
-			}
+			legacyPayload.embeds?.push(...flattenProcessed(processNode<APIEmbed>(childNode)));
 		} else if (childDISJSXType === DISJSX.ActionRow) {
-			const actionRow = processNode(childNode) as ActionRowPayload | null;
-
-			if (actionRow) {
-				legacyPayload.components?.push(actionRow);
-			}
+			legacyPayload.components?.push(
+				...flattenProcessed(processNode<APIActionRowComponent<APIComponentInMessageActionRow>>(childNode)),
+			);
 		}
 	}
 
@@ -261,7 +204,7 @@ export const renderDiscordMessage = (
  *
  * @param modalElement The root `<Modal>` React element or a component that renders to a Modal element.
  * @param options Optional configuration for validation and error handling.
- * @returns A `ModalPayload` object, or null if the input is invalid.
+ * @returns The modal data (`title`, `custom_id`, `components`), ready to pass to `interaction.showModal()`, or null if the input is invalid.
  */
 export const renderDiscordModal = (
 	modalElement: ReactElement,
@@ -269,12 +212,12 @@ export const renderDiscordModal = (
 		validate?: boolean;
 		throwOnValidationError?: boolean;
 	} = {},
-): ModalPayload | null => {
+): APIModalInteractionResponseCallbackData | null => {
 	const { validate = true, throwOnValidationError = false } = options;
 
 	const processedModalElement = getProcessedElement(modalElement);
 
-	if (!processedModalElement || getDISJSXType(processedModalElement) !== DISJSX.Modal) {
+	if (!processedModalElement || !isDISJSXElement(processedModalElement, DISJSX.Modal)) {
 		console.error("Received:", modalElement);
 		console.error("Processed:", processedModalElement);
 		console.error("DISJSX Type:", getDISJSXType(processedModalElement));
@@ -283,15 +226,11 @@ export const renderDiscordModal = (
 		return null;
 	}
 
-	const { props } = processedModalElement as ReactElement<ModalProps, TypedDISJSXComponent<ModalProps, DISJSX.Modal>>;
+	const { props } = processedModalElement;
 	const { title, customId } = props;
 
 	if (validate) {
-		const validationResult = validateComponent(
-			processedModalElement as ReactElement<ModalProps, TypedDISJSXComponent<ModalProps, DISJSX.Modal>>,
-			false,
-			"modal",
-		);
+		const validationResult = validateComponent(processedModalElement, false, "modal");
 		const customIdErrors = validateUniqueCustomIds(processedModalElement);
 
 		const allErrors = [...validationResult.errors, ...customIdErrors];
@@ -321,28 +260,15 @@ export const renderDiscordModal = (
 	}
 
 	const childrenArray = Children.toArray(props.children);
-	const components: AnyComponentPayload[] = [];
+	const components: APIModalInteractionResponseCallbackComponent[] = [];
 
 	for (const child of childrenArray) {
-		const processedNode = processNode(child);
-
-		if (processedNode !== null) {
-			if (Array.isArray(processedNode)) {
-				components.push(...flattenDeep(processedNode));
-			} else {
-				components.push(processedNode as AnyComponentPayload);
-			}
-		}
+		components.push(...flattenProcessed(processNode<APIModalInteractionResponseCallbackComponent>(child)));
 	}
 
-	const modalPayload: ModalPayload = {
-		type: InteractionType.Modal,
-		data: {
-			title,
-			custom_id: customId,
-			components,
-		},
+	return {
+		title,
+		custom_id: customId,
+		components,
 	};
-
-	return modalPayload;
 };

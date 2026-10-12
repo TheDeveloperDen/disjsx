@@ -1,16 +1,9 @@
-import {
-	renderDiscordModal,
-	Modal,
-	Label,
-	TextInput,
-	TextInputStyle,
-	StringSelect,
-	SelectOption,
-} from "disjsx";
+import { TextInputStyle } from "discord-api-types/v10";
+import { renderDiscordModal, Modal, Label, TextInput, StringSelect, SelectOption } from "disjsx";
 
 /**
  * Example: Feedback Form Modal using Label components
- * 
+ *
  * This demonstrates:
  * - Label components wrapping TextInput
  * - Label components wrapping StringSelect

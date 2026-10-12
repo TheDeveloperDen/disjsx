@@ -1,9 +1,9 @@
+import { TextInputStyle } from "discord-api-types/v10";
 import {
 	renderDiscordModal,
 	Modal,
 	Label,
 	TextInput,
-	TextInputStyle,
 	FileUpload,
 	StringSelect,
 	SelectOption,
@@ -13,7 +13,7 @@ import {
 
 /**
  * Example: Content Submission Modal
- * 
+ *
  * This demonstrates:
  * - TextDisplay with complex markdown and formatting
  * - FileUpload with optional uploads
@@ -24,14 +24,8 @@ const ContentSubmissionModal = () => {
 	return (
 		<Modal title="Submit Content" customId="content_submission_modal">
 			<TextDisplay>
-				# Content Submission Form
-				
-				Submit your creative content to be featured in our community!
-				
-				**Guidelines:**
-				- Original content only
-				- Must follow community guidelines
-				- Files must be under 10MB each
+				# Content Submission Form Submit your creative content to be featured in our community! **Guidelines:** -
+				Original content only - Must follow community guidelines - Files must be under 10MB each
 			</TextDisplay>
 
 			<Label label="Content Title" description="Give your submission a catchy title">
