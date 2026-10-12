@@ -1,8 +1,8 @@
 {
 	"name": "disjsx",
 	"version": "2.0.0",
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
+	"main": "./src/index.ts",
+	"module": "./src/index.ts",
 	"sideEffects": false,
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -28,8 +28,8 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/types/index.d.ts",
-			"default": "./dist/index.js"
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
 		}
 	},
 	"description": "A library for creating Discord messages in JSX",
@@ -57,7 +57,7 @@
 		"url": "git+https://github.com/Santa-Paws/disjsx.git"
 	},
 	"type": "module",
-	"types": "./dist/types/index.d.ts",
+	"types": "./src/index.ts",
 	"keywords": [
 		"discord",
 		"jsx",
