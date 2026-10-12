@@ -171,7 +171,10 @@ const userProfileModal = (
 );
 
 console.log(renderDiscordModal(userProfileModal));
-// Output: { type: 9, data: { title: "Edit Profile", custom_id: "profile_modal", components: [...] } }
+// Output: { title: "Edit Profile", custom_id: "profile_modal", components: [...] }
+
+// The output is the modal data itself, so it can go straight to discord.js:
+await interaction.showModal(renderDiscordModal(userProfileModal));
 ```
 
 ## Validation System
@@ -221,6 +224,11 @@ const message = (
 
 // Disable validation entirely
 const unvalidatedResult = renderDiscordMessage(message, { validate: false });
+
+// Warnings (e.g. a customId on a link button) don't throw, they are ignored unless you ask for them
+renderDiscordMessage(message, {
+	onWarning: (warning) => logger.warn(warning.message, { path: warning.path }),
+});
 ```
 
 ### Manual Validation
@@ -979,10 +987,10 @@ const myJsxModal = (
 );
 
 const modalPayload = renderDiscordModal(myJsxModal);
-// Use modalPayload in interaction responses
-console.log(modalPayload);
+// modalPayload is { title, custom_id, components }, ready for interaction.showModal()
+await interaction.showModal(modalPayload);
 ```
 
-Both `renderDiscordMessage` and `renderDiscordModal` support the same validation options for comprehensive error checking and debugging.
+Both `renderDiscordMessage` and `renderDiscordModal` take the same options (`validate` and `onWarning`) and throw `DisJSXValidationError` on invalid input.
 
 **Note:** The old `<ActionRow>` pattern for modals is deprecated. Use `<Label>` to wrap modal inputs instead.
