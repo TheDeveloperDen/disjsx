@@ -49,6 +49,18 @@ export interface ValidationError {
 /**
  * Result object returned from component validation operations.
  */
+/** Thrown by the render functions when `throwOnValidationError` is set. Carries every error for reporting. */
+export class DisJSXValidationError extends Error {
+	constructor(public readonly errors: ValidationError[]) {
+		super(
+			`DisJSX validation failed with ${errors.length} error(s):\n${errors
+				.map((e) => `  - ${e.message}${e.path ? ` (at ${e.path.join(" > ")})` : ""}`)
+				.join("\n")}`,
+		);
+		this.name = "DisJSXValidationError";
+	}
+}
+
 export interface ValidationResult {
 	/** Whether the component tree passed validation without errors */
 	isValid: boolean;

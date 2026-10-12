@@ -77,6 +77,17 @@ const renderComponent = (type: JSXElementConstructor<unknown>, props: unknown): 
 	return Reflect.apply(type, undefined, [props]);
 };
 
+/** How many custom components may wrap one another before we assume infinite recursion. */
+const MAX_COMPONENT_NESTING = 100;
+
+const assertWithinNestingLimit = (loop: number): void => {
+	if (loop > MAX_COMPONENT_NESTING) {
+		throw new RangeError(
+			`DISJSX: custom components are nested more than ${MAX_COMPONENT_NESTING} levels deep (is a component rendering itself?).`,
+		);
+	}
+};
+
 /**
  * Helper function to get the DISJSX type from a React node.
  * Handles both direct elements and function components that return DISJSX elements.
@@ -85,9 +96,7 @@ const renderComponent = (type: JSXElementConstructor<unknown>, props: unknown): 
  * @returns The DISJSX type, or undefined if not a DISJSX component.
  */
 export const getDISJSXType = (node: unknown, loop: number = 0): DISJSX | undefined => {
-	if (loop > 10) {
-		return undefined;
-	}
+	assertWithinNestingLimit(loop);
 
 	if (!isValidElement(node)) {
 		return undefined;
@@ -124,9 +133,7 @@ export const getDISJSXType = (node: unknown, loop: number = 0): DISJSX | undefin
  * @throws TypeError if a functional component meant for unwrapping returns a non-element.
  */
 export const getProcessedElement = (element: ReactElement, loop: number = 0): ReactElement => {
-	if (loop > 10) {
-		return element;
-	}
+	assertWithinNestingLimit(loop);
 
 	if (typeof element.type === "function" && !("disjsxType" in element.type)) {
 		const renderedOutput = renderComponent(element.type, element.props);

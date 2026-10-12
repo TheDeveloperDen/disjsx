@@ -16,7 +16,7 @@ import { processNode } from "./utils.js";
 import { flattenProcessed } from "./nodes/types.js";
 import { getDISJSXType, getProcessedElement } from "./utils.js";
 import { processChildrenToString } from "./processChildrenToString.js";
-import { validateComponent, validateUniqueCustomIds } from "./validation.js";
+import { DisJSXValidationError, validateComponent, validateUniqueCustomIds } from "./validation.js";
 
 // Exporting all these in the off chance someone wants to use them directly (idk why you would tho)
 export * from "./disjsxTypes.js";
@@ -40,26 +40,22 @@ export * from "./validation.js";
  *
  * @param messageElement The root `<Message>` React element or a component that renders to a Message element.
  * @param options Optional configuration for validation and error handling.
- * @returns A `LegacyMessagePayload` or `V2MessagePayload` object, or null if the input is invalid.
+ * @returns A `LegacyMessagePayload` or `V2MessagePayload` object.
  */
 export const renderDiscordMessage = (
 	messageElement: ReactElement,
 	options: {
 		validate?: boolean;
-		throwOnValidationError?: boolean;
 	} = {},
-): LegacyMessagePayload | V2MessagePayload | null => {
-	const { validate = true, throwOnValidationError = false } = options;
+): LegacyMessagePayload | V2MessagePayload => {
+	const { validate = true } = options;
 
 	const processedMessageElement = getProcessedElement(messageElement);
 
 	if (!processedMessageElement || !isDISJSXElement(processedMessageElement, DISJSX.Message)) {
-		console.error("Received:", messageElement);
-		console.error("Processed:", processedMessageElement);
-		console.error("DISJSX Type:", getDISJSXType(processedMessageElement));
-		console.error("renderDiscordMessage expects a root <Message> element or a component that renders to one.");
-
-		return null;
+		throw new TypeError(
+			`renderDiscordMessage expects a root <Message> element or a component that renders to one. Got: <${getDISJSXType(processedMessageElement) ?? "something else"}>`,
+		);
 	}
 
 	const { props } = processedMessageElement;
@@ -73,14 +69,7 @@ export const renderDiscordMessage = (
 		const allWarnings = validationResult.warnings;
 
 		if (allErrors.length > 0) {
-			console.error("DisJSX Validation Errors:");
-			allErrors.forEach((error) => {
-				console.error(`  - ${error.message}${error.path ? ` (at ${error.path.join(" > ")})` : ""}`);
-			});
-
-			if (throwOnValidationError) {
-				throw new Error(`DisJSX validation failed with ${allErrors.length} error(s). See console for details.`);
-			}
+			throw new DisJSXValidationError(allErrors);
 		}
 
 		if (allWarnings.length > 0) {
@@ -88,10 +77,6 @@ export const renderDiscordMessage = (
 			allWarnings.forEach((warning) => {
 				console.warn(`  - ${warning.message}${warning.path ? ` (at ${warning.path.join(" > ")})` : ""}`);
 			});
-		}
-
-		if (allErrors.length > 0 && !throwOnValidationError) {
-			return null;
 		}
 	}
 
@@ -204,26 +189,22 @@ export const renderDiscordMessage = (
  *
  * @param modalElement The root `<Modal>` React element or a component that renders to a Modal element.
  * @param options Optional configuration for validation and error handling.
- * @returns The modal data (`title`, `custom_id`, `components`), ready to pass to `interaction.showModal()`, or null if the input is invalid.
+ * @returns The modal data (`title`, `custom_id`, `components`), ready to pass to `interaction.showModal()`.
  */
 export const renderDiscordModal = (
 	modalElement: ReactElement,
 	options: {
 		validate?: boolean;
-		throwOnValidationError?: boolean;
 	} = {},
-): APIModalInteractionResponseCallbackData | null => {
-	const { validate = true, throwOnValidationError = false } = options;
+): APIModalInteractionResponseCallbackData => {
+	const { validate = true } = options;
 
 	const processedModalElement = getProcessedElement(modalElement);
 
 	if (!processedModalElement || !isDISJSXElement(processedModalElement, DISJSX.Modal)) {
-		console.error("Received:", modalElement);
-		console.error("Processed:", processedModalElement);
-		console.error("DISJSX Type:", getDISJSXType(processedModalElement));
-		console.error("renderDiscordModal expects a root <Modal> element or a component that renders to one.");
-
-		return null;
+		throw new TypeError(
+			`renderDiscordModal expects a root <Modal> element or a component that renders to one. Got: <${getDISJSXType(processedModalElement) ?? "something else"}>`,
+		);
 	}
 
 	const { props } = processedModalElement;
@@ -237,14 +218,7 @@ export const renderDiscordModal = (
 		const allWarnings = validationResult.warnings;
 
 		if (allErrors.length > 0) {
-			console.error("DisJSX Modal Validation Errors:");
-			allErrors.forEach((error) => {
-				console.error(`  - ${error.message}${error.path ? ` (at ${error.path.join(" > ")})` : ""}`);
-			});
-
-			if (throwOnValidationError) {
-				throw new Error(`DisJSX modal validation failed with ${allErrors.length} error(s). See console for details.`);
-			}
+			throw new DisJSXValidationError(allErrors);
 		}
 
 		if (allWarnings.length > 0) {
@@ -252,10 +226,6 @@ export const renderDiscordModal = (
 			allWarnings.forEach((warning) => {
 				console.warn(`  - ${warning.message}${warning.path ? ` (at ${warning.path.join(" > ")})` : ""}`);
 			});
-		}
-
-		if (allErrors.length > 0 && !throwOnValidationError) {
-			return null;
 		}
 	}
 

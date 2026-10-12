@@ -190,7 +190,7 @@ DisJSX includes a comprehensive validation system that helps you catch errors be
 By default, validation is enabled for both `renderDiscordMessage` and `renderDiscordModal`:
 
 ```tsx
-import { Message, Content, renderDiscordMessage } from "disjsx";
+import { Message, Content, renderDiscordMessage, DisJSXValidationError } from "disjsx";
 
 const message = (
 	<Message>
@@ -198,14 +198,17 @@ const message = (
 	</Message>
 );
 
-// This will log validation errors to the console and return null
-const result = renderDiscordMessage(message);
-// Console output: "DisJSX Validation Errors: - Message content cannot exceed 2000 characters"
+// Throws a DisJSXValidationError listing every error and where it occurred
+try {
+	renderDiscordMessage(message);
+} catch (error) {
+	if (error instanceof DisJSXValidationError) console.error(error.errors); // [{ message, path }, ...]
+}
 ```
 
 ### Validation Options
 
-You can customize validation behavior with options:
+Validation errors always throw. Skip validation with `validate: false`:
 
 ```tsx
 import { Message, Content, renderDiscordMessage } from "disjsx";
@@ -218,16 +221,6 @@ const message = (
 
 // Disable validation entirely
 const unvalidatedResult = renderDiscordMessage(message, { validate: false });
-
-// Enable validation with error throwing
-try {
-	const result = renderDiscordMessage(message, {
-		validate: true,
-		throwOnValidationError: true,
-	});
-} catch (error) {
-	console.error("Validation failed:", error.message);
-}
 ```
 
 ### Manual Validation
