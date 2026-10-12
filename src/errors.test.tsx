@@ -43,3 +43,29 @@ test("deeply nested custom components throw instead of vanishing", () => {
 		),
 	).toThrow(/nested more than/);
 });
+
+test("unset webhook fields are omitted", () => {
+	const out = renderDiscordMessage(
+		<Message isV2>
+			<TextDisplay>hi</TextDisplay>
+		</Message>,
+	);
+
+	expect(Object.keys(out)).toEqual(["components", "flags"]);
+	expect("flags" in renderDiscordMessage(<Message>hello</Message>)).toBe(false);
+});
+
+test("warnings go to onWarning and nowhere else", () => {
+	const warnings: string[] = [];
+	const tree = (
+		<Message isV2>
+			<ActionRow>
+				<Button style={ButtonStyle.Link} url="https://example.com" label="x" {...{ customId: "c" }} />
+			</ActionRow>
+		</Message>
+	);
+
+	renderDiscordMessage(tree, { onWarning: (w) => warnings.push(w.message) });
+	expect(warnings.length).toBeGreaterThan(0);
+	expect(() => renderDiscordMessage(tree)).not.toThrow();
+});

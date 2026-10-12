@@ -49,7 +49,7 @@ export interface ValidationError {
 /**
  * Result object returned from component validation operations.
  */
-/** Thrown by the render functions when `throwOnValidationError` is set. Carries every error for reporting. */
+/** Thrown by the render functions when validation finds errors. Carries every error for reporting. */
 export class DisJSXValidationError extends Error {
 	constructor(public readonly errors: ValidationError[]) {
 		super(

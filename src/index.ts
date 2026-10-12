@@ -16,7 +16,12 @@ import { processNode } from "./utils.js";
 import { flattenProcessed } from "./nodes/types.js";
 import { getDISJSXType, getProcessedElement } from "./utils.js";
 import { processChildrenToString } from "./processChildrenToString.js";
-import { DisJSXValidationError, validateComponent, validateUniqueCustomIds } from "./validation.js";
+import {
+	DisJSXValidationError,
+	type ValidationError,
+	validateComponent,
+	validateUniqueCustomIds,
+} from "./validation.js";
 
 // Exporting all these in the off chance someone wants to use them directly (idk why you would tho)
 export * from "./disjsxTypes.js";
@@ -25,6 +30,13 @@ export * from "./utils.js";
 export * from "./processChildrenToString.js";
 export * from "./nodes/index.js";
 export * from "./validation.js";
+
+export type RenderOptions = {
+	/** Whether to validate the tree before rendering. Defaults to `true`. */
+	validate?: boolean;
+	/** Called once per non-fatal validation warning. Warnings are ignored when this is not set. */
+	onWarning?: (warning: ValidationError) => void;
+};
 
 /**
  * Renders a DISJSX `<Message>` element and its children into a Discord message payload object.
@@ -39,16 +51,17 @@ export * from "./validation.js";
  * based on the DISJSX children (`<Content>`, `<Embed>`, `<ActionRow>`).
  *
  * @param messageElement The root `<Message>` React element or a component that renders to a Message element.
- * @param options Optional configuration for validation and error handling.
- * @returns A `LegacyMessagePayload` or `V2MessagePayload` object.
+ * @param options See {@link RenderOptions}.
+ * @returns A `LegacyMessagePayload` or `V2MessagePayload` object. Unset webhook fields (`username`, `avatar_url`, `tts`) and `flags` are omitted.
+ * @throws {DisJSXValidationError} If validation finds errors. Use `validate: false` to skip validation.
+ * @throws {TypeError} If the root is not a `<Message>`, or a custom component returns something other than an element.
+ * @throws {RangeError} If custom components are nested too deeply.
  */
 export const renderDiscordMessage = (
 	messageElement: ReactElement,
-	options: {
-		validate?: boolean;
-	} = {},
+	options: RenderOptions = {},
 ): LegacyMessagePayload | V2MessagePayload => {
-	const { validate = true } = options;
+	const { validate = true, onWarning } = options;
 
 	const processedMessageElement = getProcessedElement(messageElement);
 
@@ -72,15 +85,17 @@ export const renderDiscordMessage = (
 			throw new DisJSXValidationError(allErrors);
 		}
 
-		if (allWarnings.length > 0) {
-			console.warn("DisJSX Validation Warnings:");
-			allWarnings.forEach((warning) => {
-				console.warn(`  - ${warning.message}${warning.path ? ` (at ${warning.path.join(" > ")})` : ""}`);
-			});
-		}
+		allWarnings.forEach((warning) => onWarning?.(warning));
 	}
 
 	const childrenArray = Children.toArray(props.children);
+
+	// Webhook-only fields are left out entirely when unset, not set to undefined.
+	const webhookFields = {
+		...(username !== undefined && { username }),
+		...(avatarUrl !== undefined && { avatar_url: avatarUrl }),
+		...(tts !== undefined && { tts }),
+	};
 
 	if (isV2) {
 		const v2Components: APIMessageTopLevelComponent[] = [];
@@ -98,9 +113,7 @@ export const renderDiscordMessage = (
 			}
 		}
 		const v2Payload: V2MessagePayload = {
-			username,
-			avatar_url: avatarUrl,
-			tts,
+			...webhookFields,
 			components: v2Components,
 			flags: MessageFlags.IsComponentsV2 | (flags || 0),
 		};
@@ -109,12 +122,10 @@ export const renderDiscordMessage = (
 	}
 
 	const legacyPayload: LegacyMessagePayload = {
-		username,
-		avatar_url: avatarUrl,
-		tts,
+		...webhookFields,
 		embeds: [],
 		components: [],
-		flags: flags,
+		...(flags !== undefined && { flags }),
 	};
 
 	for (const rawChildNode of childrenArray) {
@@ -188,16 +199,17 @@ export const renderDiscordMessage = (
  * Modals can contain Label (recommended), TextDisplay, or ActionRow (deprecated for Text Inputs) components.
  *
  * @param modalElement The root `<Modal>` React element or a component that renders to a Modal element.
- * @param options Optional configuration for validation and error handling.
+ * @param options See {@link RenderOptions}.
  * @returns The modal data (`title`, `custom_id`, `components`), ready to pass to `interaction.showModal()`.
+ * @throws {DisJSXValidationError} If validation finds errors. Use `validate: false` to skip validation.
+ * @throws {TypeError} If the root is not a `<Modal>`, a `<Label>` has no child, or a custom component returns something other than an element.
+ * @throws {RangeError} If custom components are nested too deeply.
  */
 export const renderDiscordModal = (
 	modalElement: ReactElement,
-	options: {
-		validate?: boolean;
-	} = {},
+	options: RenderOptions = {},
 ): APIModalInteractionResponseCallbackData => {
-	const { validate = true } = options;
+	const { validate = true, onWarning } = options;
 
 	const processedModalElement = getProcessedElement(modalElement);
 
@@ -221,12 +233,7 @@ export const renderDiscordModal = (
 			throw new DisJSXValidationError(allErrors);
 		}
 
-		if (allWarnings.length > 0) {
-			console.warn("DisJSX Modal Validation Warnings:");
-			allWarnings.forEach((warning) => {
-				console.warn(`  - ${warning.message}${warning.path ? ` (at ${warning.path.join(" > ")})` : ""}`);
-			});
-		}
+		allWarnings.forEach((warning) => onWarning?.(warning));
 	}
 
 	const childrenArray = Children.toArray(props.children);

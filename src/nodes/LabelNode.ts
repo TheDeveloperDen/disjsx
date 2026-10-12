@@ -24,8 +24,7 @@ export const LabelNode: NodeProcessor<APILabelComponent, LabelProps, APIComponen
 		}
 
 		if (!component) {
-			console.warn("Label must contain a child component (TextInput, Select, or FileUpload)");
-			return null;
+			throw new TypeError("DISJSX: Label must contain a child component (TextInput, Select, or FileUpload).");
 		}
 
 		return {

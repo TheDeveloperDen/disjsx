@@ -142,13 +142,6 @@ export const getProcessedElement = (element: ReactElement, loop: number = 0): Re
 			return getProcessedElement(renderedOutput, loop + 1);
 		}
 
-		console.error(
-			"Error in getProcessedElement: A functional component without 'disjsxType' returned a non-element or null. Element:",
-			element,
-			"Rendered output:",
-			renderedOutput,
-		);
-
 		throw new TypeError("DISJSX: Functional component wrapper did not return a valid React element.");
 	}
 
